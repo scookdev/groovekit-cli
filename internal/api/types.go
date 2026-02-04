@@ -93,3 +93,24 @@ type CreateMonitorRequest struct {
 	GracePeriod           int      `json:"grace_period,omitempty"`
 	Status                string   `json:"status,omitempty"`
 }
+
+// ApiCheck represents an API health check result
+type ApiCheck struct {
+	ID              string  `json:"id"`
+	APIMonitorID    string  `json:"api_monitor_id"`
+	StatusCode      int     `json:"status_code"`
+	ResponseTime    int     `json:"response_time"`
+	Success         bool    `json:"success"`
+	ErrorMessage    *string `json:"error_message"`
+	ValidationError *string `json:"validation_error"`
+	CreatedAt       string  `json:"created_at"`
+}
+
+// Ping represents a job heartbeat ping
+type Ping struct {
+	ID        string  `json:"id"`
+	JobID     string  `json:"job_id"`
+	PingType  string  `json:"ping_type"`
+	Duration  *int    `json:"duration"`
+	CreatedAt string  `json:"created_at"`
+}

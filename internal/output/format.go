@@ -1,6 +1,7 @@
 package output
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/fatih/color"
@@ -74,4 +75,29 @@ func ErrorMessage(msg string) {
 // InfoMessage prints a cyan info message
 func InfoMessage(msg string) {
 	color.Cyan(msg)
+}
+
+// FormatDuration converts minutes to human-readable format
+// Examples: 30 -> "30 minutes", 60 -> "1 hour", 1440 -> "1 day"
+func FormatDuration(minutes int) string {
+	if minutes < 60 {
+		if minutes == 1 {
+			return "1 minute"
+		}
+		return fmt.Sprintf("%d minutes", minutes)
+	}
+
+	if minutes < 1440 {
+		hours := minutes / 60
+		if hours == 1 {
+			return "1 hour"
+		}
+		return fmt.Sprintf("%d hours", hours)
+	}
+
+	days := minutes / 1440
+	if days == 1 {
+		return "1 day"
+	}
+	return fmt.Sprintf("%d days", days)
 }

@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
-	"strconv"
 
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/config"
@@ -30,6 +30,12 @@ var jobsListCmd = &cobra.Command{
 		result, err := client.ListJobs()
 		if err != nil {
 			return fmt.Errorf("failed to list jobs: %w", err)
+		}
+
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		if jsonOutput {
+			return outputJSON(result)
 		}
 
 		if len(result.Jobs) == 0 {
@@ -64,7 +70,7 @@ var jobsListCmd = &cobra.Command{
 			table.Append([]string{
 				output.Cyan(shortID),
 				job.Name,
-				strconv.Itoa(job.Interval) + "m",
+				output.FormatDuration(job.Interval),
 				status,
 				health,
 			})
@@ -99,12 +105,18 @@ var jobsShowCmd = &cobra.Command{
 			return fmt.Errorf("failed to get job: %w", err)
 		}
 
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		if jsonOutput {
+			return outputJSON(job)
+		}
+
 		// Print job details
 		fmt.Printf("ID:            %s\n", job.ID)
 		fmt.Printf("Name:          %s\n", job.Name)
 		fmt.Printf("Status:        %s\n", job.Status)
-		fmt.Printf("Interval:      %d minutes\n", job.Interval)
-		fmt.Printf("Grace Period:  %d minutes\n", job.GracePeriod)
+		fmt.Printf("Interval:      %s\n", output.FormatDuration(job.Interval))
+		fmt.Printf("Grace Period:  %s\n", output.FormatDuration(job.GracePeriod))
 		fmt.Printf("Down:          %t\n", job.Down)
 
 		if job.LastPingAt != nil {
@@ -118,7 +130,7 @@ var jobsShowCmd = &cobra.Command{
 		}
 
 		fmt.Printf("\nPing URL:\n")
-		fmt.Printf("  curl https://api.groovekit.com/pings/%s\n", job.PingToken)
+		fmt.Printf("  curl https://api.groovekit.io/pings/%s\n", job.PingToken)
 
 		if len(job.AllowedIPs) > 0 {
 			fmt.Printf("\nAllowed IPs:   %v\n", job.AllowedIPs)
@@ -172,7 +184,7 @@ var jobsCreateCmd = &cobra.Command{
 		fmt.Printf("Interval:     %s\n", fmt.Sprintf("%d minutes", job.Interval))
 		fmt.Printf("Grace Period: %s\n", fmt.Sprintf("%d minutes", job.GracePeriod))
 		fmt.Printf("\n%s\n", output.Bold("Ping URL:"))
-		fmt.Printf("  %s\n", output.Cyan(fmt.Sprintf("curl https://api.groovekit.com/pings/%s", job.PingToken)))
+		fmt.Printf("  %s\n", output.Cyan(fmt.Sprintf("curl https://api.groovekit.io/pings/%s", job.PingToken)))
 
 		return nil
 	},
@@ -239,6 +251,16 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
+// Helper function to output JSON
+func outputJSON(v interface{}) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal JSON: %w", err)
+	}
+	fmt.Println(string(data))
+	return nil
+}
+
 // Helper function to resolve a short ID to a full ID
 func resolveJobID(client *api.Client, shortID string) (string, error) {
 	// If it looks like a full UUID, use it as-is
@@ -271,6 +293,12 @@ func resolveJobID(client *api.Client, shortID string) (string, error) {
 }
 
 func init() {
+	// Add flags to list command
+	jobsListCmd.Flags().Bool("json", false, "Output as JSON")
+
+	// Add flags to show command
+	jobsShowCmd.Flags().Bool("json", false, "Output as JSON")
+
 	// Add flags to create command
 	jobsCreateCmd.Flags().String("name", "", "Job name (required)")
 	jobsCreateCmd.Flags().Int("interval", 0, "Check interval in minutes (required)")

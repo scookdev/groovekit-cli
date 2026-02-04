@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/output"
@@ -29,6 +28,12 @@ var monitorsListCmd = &cobra.Command{
 		result, err := client.ListMonitors()
 		if err != nil {
 			return fmt.Errorf("failed to list monitors: %w", err)
+		}
+
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		if jsonOutput {
+			return outputJSON(result)
 		}
 
 		if len(result.APIMonitors) == 0 {
@@ -64,7 +69,7 @@ var monitorsListCmd = &cobra.Command{
 				output.Cyan(shortID),
 				monitor.Name,
 				truncate(monitor.URL, 40),
-				strconv.Itoa(monitor.Interval) + "m",
+				output.FormatDuration(monitor.Interval),
 				status,
 				health,
 			})
@@ -99,15 +104,21 @@ var monitorsShowCmd = &cobra.Command{
 			return fmt.Errorf("failed to get monitor: %w", err)
 		}
 
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+		if jsonOutput {
+			return outputJSON(monitor)
+		}
+
 		// Print monitor details
 		fmt.Printf("ID:               %s\n", output.Cyan(monitor.ID))
 		fmt.Printf("Name:             %s\n", output.Bold(monitor.Name))
 		fmt.Printf("URL:              %s\n", monitor.URL)
 		fmt.Printf("HTTP Method:      %s\n", monitor.HTTPMethod)
 		fmt.Printf("Status:           %s\n", monitor.Status)
-		fmt.Printf("Interval:         %d minutes\n", monitor.Interval)
+		fmt.Printf("Interval:         %s\n", output.FormatDuration(monitor.Interval))
 		fmt.Printf("Timeout:          %d seconds\n", monitor.Timeout)
-		fmt.Printf("Grace Period:     %d minutes\n", monitor.GracePeriod)
+		fmt.Printf("Grace Period:     %s\n", output.FormatDuration(monitor.GracePeriod))
 		fmt.Printf("Down:             %t\n", monitor.Down)
 
 		if len(monitor.ExpectedStatusCodes) > 0 {
@@ -259,6 +270,12 @@ func resolveMonitorID(client *api.Client, shortID string) (string, error) {
 }
 
 func init() {
+	// Add flags to list command
+	monitorsListCmd.Flags().Bool("json", false, "Output as JSON")
+
+	// Add flags to show command
+	monitorsShowCmd.Flags().Bool("json", false, "Output as JSON")
+
 	// Add flags to create command
 	monitorsCreateCmd.Flags().String("name", "", "Monitor name (required)")
 	monitorsCreateCmd.Flags().String("url", "", "URL to monitor (required)")

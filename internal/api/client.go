@@ -228,3 +228,25 @@ func (c *Client) CreateMonitor(req *CreateMonitorRequest) (*Monitor, error) {
 func (c *Client) DeleteMonitor(id string) error {
 	return c.Delete("/api_monitors/" + id)
 }
+
+// ListMonitorChecks returns recent checks for a monitor
+func (c *Client) ListMonitorChecks(id string) ([]ApiCheck, error) {
+	var result struct {
+		APIChecks []ApiCheck `json:"api_checks"`
+	}
+	if err := c.Get("/api_monitors/"+id+"/api_checks", &result); err != nil {
+		return nil, err
+	}
+	return result.APIChecks, nil
+}
+
+// ListJobPings returns recent pings for a job
+func (c *Client) ListJobPings(id string) ([]Ping, error) {
+	var result struct {
+		Pings []Ping `json:"pings"`
+	}
+	if err := c.Get("/jobs/"+id+"/pings", &result); err != nil {
+		return nil, err
+	}
+	return result.Pings, nil
+}

@@ -50,7 +50,7 @@ func getAPIBaseURL() string {
 	if envURL := os.Getenv("GROOVEKIT_API_URL"); envURL != "" {
 		return envURL
 	}
-	return "https://api.groovekit.com"
+	return "https://api.groovekit.io"
 }
 
 // Save writes the config to ~/.groovekit/config.json
