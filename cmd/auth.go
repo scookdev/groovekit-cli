@@ -1,0 +1,108 @@
+package cmd
+
+import (
+	"fmt"
+	"os"
+	"syscall"
+
+	"github.com/scookdev/groovekit-cli/internal/api"
+	"github.com/scookdev/groovekit-cli/internal/config"
+	"github.com/spf13/cobra"
+	"golang.org/x/term"
+)
+
+var authCmd = &cobra.Command{
+	Use:   "auth",
+	Short: "Manage authentication",
+	Long:  "Login, logout, and check authentication status",
+}
+
+var loginCmd = &cobra.Command{
+	Use:   "login",
+	Short: "Login to GrooveKit",
+	Long:  "Authenticate with your GrooveKit account and save credentials locally",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Prompt for email
+		fmt.Print("Email: ")
+		var email string
+		fmt.Scanln(&email)
+
+		// Prompt for password (hidden)
+		fmt.Print("Password: ")
+		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return fmt.Errorf("failed to read password: %w", err)
+		}
+		fmt.Println() // New line after password input
+		password := string(passwordBytes)
+
+		// Load config
+		cfg, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+
+		// Create API client and login
+		client := api.NewClient(cfg)
+		token, err := client.Login(email, password)
+		if err != nil {
+			return fmt.Errorf("login failed: %w", err)
+		}
+
+		// Save credentials
+		cfg.AccessToken = token
+		cfg.Email = email
+		if err := cfg.Save(); err != nil {
+			return fmt.Errorf("failed to save config: %w", err)
+		}
+
+		fmt.Printf("✓ Logged in successfully as %s\n", email)
+		return nil
+	},
+}
+
+var logoutCmd = &cobra.Command{
+	Use:   "logout",
+	Short: "Logout from GrooveKit",
+	Long:  "Remove locally stored credentials",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := config.Clear(); err != nil {
+			if os.IsNotExist(err) {
+				fmt.Println("Not currently logged in")
+				return nil
+			}
+			return fmt.Errorf("failed to logout: %w", err)
+		}
+
+		fmt.Println("✓ Logged out successfully")
+		return nil
+	},
+}
+
+var whoamiCmd = &cobra.Command{
+	Use:   "whoami",
+	Short: "Show current user",
+	Long:  "Display the email of the currently authenticated user",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		cfg, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+
+		if !cfg.IsAuthenticated() {
+			fmt.Println("Not logged in")
+			fmt.Println("Run 'groovekit auth login' to authenticate")
+			return nil
+		}
+
+		fmt.Printf("Logged in as: %s\n", cfg.Email)
+		return nil
+	},
+}
+
+func init() {
+	authCmd.AddCommand(loginCmd)
+	authCmd.AddCommand(logoutCmd)
+	authCmd.AddCommand(whoamiCmd)
+	rootCmd.AddCommand(authCmd)
+}
