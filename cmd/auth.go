@@ -7,6 +7,7 @@ import (
 
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/config"
+	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
 )
@@ -56,7 +57,7 @@ var loginCmd = &cobra.Command{
 			return fmt.Errorf("failed to save config: %w", err)
 		}
 
-		fmt.Printf("✓ Logged in successfully as %s\n", email)
+		output.SuccessMessage(fmt.Sprintf("Logged in successfully as %s", output.Bold(email)))
 		return nil
 	},
 }
@@ -74,7 +75,7 @@ var logoutCmd = &cobra.Command{
 			return fmt.Errorf("failed to logout: %w", err)
 		}
 
-		fmt.Println("✓ Logged out successfully")
+		output.SuccessMessage("Logged out successfully")
 		return nil
 	},
 }

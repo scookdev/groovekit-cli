@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/scookdev/groovekit-cli/internal/config"
 )
@@ -95,7 +96,34 @@ func (c *Client) doRequest(method, path string, body interface{}, result interfa
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+		bodyStr := string(bodyBytes)
+
+		// Check if response looks like HTML (common for Rails error pages)
+		if len(bodyStr) > 0 && (bodyStr[0] == '<' || strings.Contains(bodyStr, "<!DOCTYPE")) {
+			// Don't dump HTML, provide a clean error message
+			return fmt.Errorf("API error (status %d): %s", resp.StatusCode, http.StatusText(resp.StatusCode))
+		}
+
+		// Try to parse as JSON error
+		var errResp struct {
+			Error   string `json:"error"`
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(bodyBytes, &errResp); err == nil {
+			if errResp.Error != "" {
+				return fmt.Errorf("API error (status %d): %s", resp.StatusCode, errResp.Error)
+			}
+			if errResp.Message != "" {
+				return fmt.Errorf("API error (status %d): %s", resp.StatusCode, errResp.Message)
+			}
+		}
+
+		// Fallback to raw body if it's short
+		if len(bodyStr) < 200 {
+			return fmt.Errorf("API error (status %d): %s", resp.StatusCode, bodyStr)
+		}
+
+		return fmt.Errorf("API error (status %d): %s", resp.StatusCode, http.StatusText(resp.StatusCode))
 	}
 
 	if result != nil {
@@ -169,34 +197,34 @@ func (c *Client) DeleteJob(id string) error {
 // ListMonitors returns all monitors for the authenticated user
 func (c *Client) ListMonitors() (*MonitorsResponse, error) {
 	var result MonitorsResponse
-	if err := c.Get("/monitors", &result); err != nil {
+	if err := c.Get("/api_monitors", &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-// GetJob returns a single job by ID
+// GetMonitor returns a single monitor by ID
 func (c *Client) GetMonitor(id string) (*Monitor, error) {
-	var result Monitor
-	if err := c.Get("/monitors/"+id, &result); err != nil {
+	var result MonitorResponse
+	if err := c.Get("/api_monitors/"+id, &result); err != nil {
 		return nil, err
 	}
-	return &result, nil
+	return &result.APIMonitor, nil
 }
 
-// CreateJob creates a new job
+// CreateMonitor creates a new monitor
 func (c *Client) CreateMonitor(req *CreateMonitorRequest) (*Monitor, error) {
 	payload := map[string]interface{}{
-		"job": req,
+		"api_monitor": req,
 	}
 	var result MonitorResponse
-	if err := c.Post("/monitors", payload, &result); err != nil {
+	if err := c.Post("/api_monitors", payload, &result); err != nil {
 		return nil, err
 	}
-	return &result.Monitor, nil
+	return &result.APIMonitor, nil
 }
 
-// DeleteJob deletes a job by ID
+// DeleteMonitor deletes a monitor by ID
 func (c *Client) DeleteMonitor(id string) error {
-	return c.Delete("/monitors/" + id)
+	return c.Delete("/api_monitors/" + id)
 }

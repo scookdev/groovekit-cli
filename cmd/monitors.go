@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/scookdev/groovekit-cli/internal/api"
-	"github.com/scookdev/groovekit-cli/internal/config"
+	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -14,11 +15,11 @@ var monitorsCmd = &cobra.Command{
 	Long:  "List, create, show, and delete API endpoint monitors",
 }
 
-// jobs list
+// monitors list
 var monitorsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all monitors",
-	Long:  "List all monitors for your account",
+	Long:  "List all API endpoint monitors for your account",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
@@ -27,45 +28,59 @@ var monitorsListCmd = &cobra.Command{
 
 		result, err := client.ListMonitors()
 		if err != nil {
-			return fmt.Errorf("failed to list jobs: %w", err)
+			return fmt.Errorf("failed to list monitors: %w", err)
 		}
 
-		if len(result.Jobs) == 0 {
-			fmt.Println("No jobs found")
-			fmt.Println("\nCreate your first job:")
-			fmt.Println("  groovekit jobs create --name 'Daily Backup' --interval 1440")
+		if len(result.APIMonitors) == 0 {
+			output.InfoMessage("No monitors found")
+			fmt.Println("\nCreate your first monitor:")
+			fmt.Println("  groovekit monitors create --name 'Production API' --url https://api.example.com/health --interval 60")
 			return nil
 		}
 
-		// Print table header
-		fmt.Printf("%-8s %-30s %-10s %-10s %-8s\n", "ID", "NAME", "INTERVAL", "STATUS", "DOWN")
-		fmt.Println("--------------------------------------------------------------------------------")
+		// Create table
+		table := output.NewTable([]string{"ID", "NAME", "URL", "INTERVAL", "STATUS", "HEALTH"})
+		table.Render()
 
-		// Print jobs
-		for _, job := range result.Jobs {
-			downStatus := "✓"
-			if job.Down {
-				downStatus = "✗"
+		// Add rows
+		for _, monitor := range result.APIMonitors {
+			status := monitor.Status
+			if monitor.Status == "active" {
+				status = output.Green(status)
 			}
-			fmt.Printf("%-8s %-30s %-10dm %-10s %-8s\n",
-				job.ID,
-				truncate(job.Name, 30),
-				job.Interval,
-				job.Status,
-				downStatus,
-			)
+
+			health := output.Green("✓ Up")
+			if monitor.Down {
+				health = output.Red("✗ Down")
+			}
+
+			// Truncate ID to first 8 chars (like Docker)
+			shortID := monitor.ID
+			if len(shortID) > 8 {
+				shortID = shortID[:8]
+			}
+
+			table.Append([]string{
+				output.Cyan(shortID),
+				monitor.Name,
+				truncate(monitor.URL, 40),
+				strconv.Itoa(monitor.Interval) + "m",
+				status,
+				health,
+			})
 		}
 
-		fmt.Printf("\nTotal: %d job(s)\n", result.TotalCount)
+		table.Flush()
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d monitor(s)", len(result.APIMonitors))))
 		return nil
 	},
 }
 
-// jobs show <id>
-var jobsShowCmd = &cobra.Command{
+// monitors show <id>
+var monitorsShowCmd = &cobra.Command{
 	Use:   "show <id>",
-	Short: "Show job details",
-	Long:  "Display detailed information about a specific job",
+	Short: "Show monitor details",
+	Long:  "Display detailed information about a specific monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -73,49 +88,62 @@ var jobsShowCmd = &cobra.Command{
 			return err
 		}
 
-		job, err := client.GetJob(args[0])
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
 		if err != nil {
-			return fmt.Errorf("failed to get job: %w", err)
+			return err
 		}
 
-		// Print job details
-		fmt.Printf("ID:            %s\n", job.ID)
-		fmt.Printf("Name:          %s\n", job.Name)
-		fmt.Printf("Status:        %s\n", job.Status)
-		fmt.Printf("Interval:      %d minutes\n", job.Interval)
-		fmt.Printf("Grace Period:  %d minutes\n", job.GracePeriod)
-		fmt.Printf("Down:          %t\n", job.Down)
+		monitor, err := client.GetMonitor(fullID)
+		if err != nil {
+			return fmt.Errorf("failed to get monitor: %w", err)
+		}
 
-		if job.LastPingAt != nil {
-			fmt.Printf("Last Ping:     %s\n", *job.LastPingAt)
+		// Print monitor details
+		fmt.Printf("ID:               %s\n", output.Cyan(monitor.ID))
+		fmt.Printf("Name:             %s\n", output.Bold(monitor.Name))
+		fmt.Printf("URL:              %s\n", monitor.URL)
+		fmt.Printf("HTTP Method:      %s\n", monitor.HTTPMethod)
+		fmt.Printf("Status:           %s\n", monitor.Status)
+		fmt.Printf("Interval:         %d minutes\n", monitor.Interval)
+		fmt.Printf("Timeout:          %d seconds\n", monitor.Timeout)
+		fmt.Printf("Grace Period:     %d minutes\n", monitor.GracePeriod)
+		fmt.Printf("Down:             %t\n", monitor.Down)
+
+		if len(monitor.ExpectedStatusCodes) > 0 {
+			fmt.Printf("Expected Status:  %v\n", monitor.ExpectedStatusCodes)
+		}
+
+		if monitor.LastCheckAt != nil {
+			fmt.Printf("Last Check:       %s\n", *monitor.LastCheckAt)
 		} else {
-			fmt.Printf("Last Ping:     Never\n")
+			fmt.Printf("Last Check:       Never\n")
 		}
 
-		if job.LastRunAt != nil {
-			fmt.Printf("Last Run:      %s\n", *job.LastRunAt)
+		if monitor.UptimePercentage != nil {
+			fmt.Printf("Uptime (30d):     %.2f%%\n", *monitor.UptimePercentage)
 		}
 
-		fmt.Printf("\nPing URL:\n")
-		fmt.Printf("  curl https://api.groovekit.com/pings/%s\n", job.PingToken)
-
-		if len(job.AllowedIPs) > 0 {
-			fmt.Printf("\nAllowed IPs:   %v\n", job.AllowedIPs)
+		if monitor.AverageResponseTime != nil {
+			fmt.Printf("Avg Response:     %.0fms\n", *monitor.AverageResponseTime)
 		}
 
-		if job.WebhookURL != "" {
-			fmt.Printf("\nWebhook URL:   %s\n", job.WebhookURL)
+		if len(monitor.ValidateResponsePaths) > 0 {
+			fmt.Printf("\nJSON Path Validation:\n")
+			for _, path := range monitor.ValidateResponsePaths {
+				fmt.Printf("  - %s\n", path)
+			}
 		}
 
 		return nil
 	},
 }
 
-// jobs create
-var jobsCreateCmd = &cobra.Command{
+// monitors create
+var monitorsCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a new job",
-	Long:  "Create a new cron job heartbeat monitor",
+	Short: "Create a new monitor",
+	Long:  "Create a new API endpoint monitor",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
@@ -124,44 +152,47 @@ var jobsCreateCmd = &cobra.Command{
 
 		// Get flag values
 		name, _ := cmd.Flags().GetString("name")
+		url, _ := cmd.Flags().GetString("url")
 		interval, _ := cmd.Flags().GetInt("interval")
-		gracePeriod, _ := cmd.Flags().GetInt("grace-period")
+		method, _ := cmd.Flags().GetString("method")
 
 		if name == "" {
 			return fmt.Errorf("--name is required")
+		}
+		if url == "" {
+			return fmt.Errorf("--url is required")
 		}
 		if interval <= 0 {
 			return fmt.Errorf("--interval must be greater than 0")
 		}
 
-		req := &api.CreateJobRequest{
-			Name:        name,
-			Interval:    interval,
-			GracePeriod: gracePeriod,
+		req := &api.CreateMonitorRequest{
+			Name:       name,
+			URL:        url,
+			Interval:   interval,
+			HTTPMethod: method,
 		}
 
-		job, err := client.CreateJob(req)
+		monitor, err := client.CreateMonitor(req)
 		if err != nil {
-			return fmt.Errorf("failed to create job: %w", err)
+			return fmt.Errorf("failed to create monitor: %w", err)
 		}
 
-		fmt.Printf("✓ Job created successfully\n\n")
-		fmt.Printf("ID:           %s\n", job.ID)
-		fmt.Printf("Name:         %s\n", job.Name)
-		fmt.Printf("Interval:     %d minutes\n", job.Interval)
-		fmt.Printf("Grace Period: %d minutes\n", job.GracePeriod)
-		fmt.Printf("\nPing URL:\n")
-		fmt.Printf("  curl https://api.groovekit.com/pings/%s\n", job.PingToken)
+		output.SuccessMessage("Monitor created successfully\n")
+		fmt.Printf("ID:          %s\n", output.Cyan(monitor.ID))
+		fmt.Printf("Name:        %s\n", output.Bold(monitor.Name))
+		fmt.Printf("URL:         %s\n", monitor.URL)
+		fmt.Printf("Interval:    %s\n", fmt.Sprintf("%d minutes", monitor.Interval))
 
 		return nil
 	},
 }
 
-// jobs delete <id>
-var jobsDeleteCmd = &cobra.Command{
+// monitors delete <id>
+var monitorsDeleteCmd = &cobra.Command{
 	Use:   "delete <id>",
-	Short: "Delete a job",
-	Long:  "Delete a cron job monitor",
+	Short: "Delete a monitor",
+	Long:  "Delete an API endpoint monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -169,10 +200,16 @@ var jobsDeleteCmd = &cobra.Command{
 			return err
 		}
 
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
+		if err != nil {
+			return err
+		}
+
 		// Confirm deletion
 		confirm, _ := cmd.Flags().GetBool("force")
 		if !confirm {
-			fmt.Printf("Are you sure you want to delete job %s? (y/N): ", args[0])
+			fmt.Printf("Are you sure you want to delete monitor %s? (y/N): ", args[0])
 			var response string
 			fmt.Scanln(&response)
 			if response != "y" && response != "Y" {
@@ -181,54 +218,64 @@ var jobsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.DeleteJob(args[0]); err != nil {
-			return fmt.Errorf("failed to delete job: %w", err)
+		if err := client.DeleteMonitor(fullID); err != nil {
+			return fmt.Errorf("failed to delete monitor: %w", err)
 		}
 
-		fmt.Printf("✓ Job %s deleted successfully\n", args[0])
+		output.SuccessMessage(fmt.Sprintf("Monitor %s deleted successfully", args[0]))
 		return nil
 	},
 }
 
-// Helper function to get authenticated client
-func getAuthenticatedClient() (*api.Client, error) {
-	cfg, err := config.Load()
+// Helper function to resolve a short monitor ID to a full ID
+func resolveMonitorID(client *api.Client, shortID string) (string, error) {
+	// If it looks like a full UUID, use it as-is
+	if len(shortID) >= 32 {
+		return shortID, nil
+	}
+
+	// Otherwise, fetch all monitors and match by prefix
+	result, err := client.ListMonitors()
 	if err != nil {
-		return nil, fmt.Errorf("failed to load config: %w", err)
+		return "", fmt.Errorf("failed to list monitors: %w", err)
 	}
 
-	if !cfg.IsAuthenticated() {
-		return nil, fmt.Errorf("not logged in. Run 'groovekit auth login' first")
+	var matches []string
+	for _, monitor := range result.APIMonitors {
+		if len(monitor.ID) >= len(shortID) && monitor.ID[:len(shortID)] == shortID {
+			matches = append(matches, monitor.ID)
+		}
 	}
 
-	return api.NewClient(cfg), nil
-}
-
-// Helper function to truncate strings
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
+	if len(matches) == 0 {
+		return "", fmt.Errorf("no monitor found with ID prefix '%s'", shortID)
 	}
-	return s[:maxLen-3] + "..."
+
+	if len(matches) > 1 {
+		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple monitors", shortID)
+	}
+
+	return matches[0], nil
 }
 
 func init() {
 	// Add flags to create command
-	jobsCreateCmd.Flags().String("name", "", "Job name (required)")
-	jobsCreateCmd.Flags().Int("interval", 0, "Check interval in minutes (required)")
-	jobsCreateCmd.Flags().Int("grace-period", 5, "Grace period in minutes")
-	jobsCreateCmd.MarkFlagRequired("name")
-	jobsCreateCmd.MarkFlagRequired("interval")
+	monitorsCreateCmd.Flags().String("name", "", "Monitor name (required)")
+	monitorsCreateCmd.Flags().String("url", "", "URL to monitor (required)")
+	monitorsCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
+	monitorsCreateCmd.Flags().String("method", "GET", "HTTP method")
+	monitorsCreateCmd.MarkFlagRequired("name")
+	monitorsCreateCmd.MarkFlagRequired("url")
 
 	// Add flags to delete command
-	jobsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
+	monitorsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
 	// Add subcommands
-	jobsCmd.AddCommand(jobsListCmd)
-	jobsCmd.AddCommand(jobsShowCmd)
-	jobsCmd.AddCommand(jobsCreateCmd)
-	jobsCmd.AddCommand(jobsDeleteCmd)
+	monitorsCmd.AddCommand(monitorsListCmd)
+	monitorsCmd.AddCommand(monitorsShowCmd)
+	monitorsCmd.AddCommand(monitorsCreateCmd)
+	monitorsCmd.AddCommand(monitorsDeleteCmd)
 
-	// Add jobs command to root
-	rootCmd.AddCommand(jobsCmd)
+	// Add monitors command to root
+	rootCmd.AddCommand(monitorsCmd)
 }

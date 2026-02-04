@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/config"
+	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
 )
 
@@ -31,32 +33,45 @@ var jobsListCmd = &cobra.Command{
 		}
 
 		if len(result.Jobs) == 0 {
-			fmt.Println("No jobs found")
+			output.InfoMessage("No jobs found")
 			fmt.Println("\nCreate your first job:")
 			fmt.Println("  groovekit jobs create --name 'Daily Backup' --interval 1440")
 			return nil
 		}
 
-		// Print table header
-		fmt.Printf("%-8s %-30s %-10s %-10s %-8s\n", "ID", "NAME", "INTERVAL", "STATUS", "DOWN")
-		fmt.Println("--------------------------------------------------------------------------------")
+		// Create table
+		table := output.NewTable([]string{"ID", "NAME", "INTERVAL", "STATUS", "HEALTH"})
+		table.Render()
 
-		// Print jobs
+		// Add rows
 		for _, job := range result.Jobs {
-			downStatus := "✓"
-			if job.Down {
-				downStatus = "✗"
+			status := job.Status
+			if job.Status == "active" {
+				status = output.Green(status)
 			}
-			fmt.Printf("%-8s %-30s %-10dm %-10s %-8s\n",
-				job.ID,
-				truncate(job.Name, 30),
-				job.Interval,
-				job.Status,
-				downStatus,
-			)
+
+			health := output.Green("✓ Up")
+			if job.Down {
+				health = output.Red("✗ Down")
+			}
+
+			// Truncate ID to first 8 chars (like Docker)
+			shortID := job.ID
+			if len(shortID) > 8 {
+				shortID = shortID[:8]
+			}
+
+			table.Append([]string{
+				output.Cyan(shortID),
+				job.Name,
+				strconv.Itoa(job.Interval) + "m",
+				status,
+				health,
+			})
 		}
 
-		fmt.Printf("\nTotal: %d job(s)\n", result.TotalCount)
+		table.Flush()
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d job(s)", result.TotalCount)))
 		return nil
 	},
 }
@@ -73,7 +88,13 @@ var jobsShowCmd = &cobra.Command{
 			return err
 		}
 
-		job, err := client.GetJob(args[0])
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		job, err := client.GetJob(fullID)
 		if err != nil {
 			return fmt.Errorf("failed to get job: %w", err)
 		}
@@ -145,13 +166,13 @@ var jobsCreateCmd = &cobra.Command{
 			return fmt.Errorf("failed to create job: %w", err)
 		}
 
-		fmt.Printf("✓ Job created successfully\n\n")
-		fmt.Printf("ID:           %s\n", job.ID)
-		fmt.Printf("Name:         %s\n", job.Name)
-		fmt.Printf("Interval:     %d minutes\n", job.Interval)
-		fmt.Printf("Grace Period: %d minutes\n", job.GracePeriod)
-		fmt.Printf("\nPing URL:\n")
-		fmt.Printf("  curl https://api.groovekit.com/pings/%s\n", job.PingToken)
+		output.SuccessMessage("Job created successfully\n")
+		fmt.Printf("ID:           %s\n", output.Cyan(job.ID))
+		fmt.Printf("Name:         %s\n", output.Bold(job.Name))
+		fmt.Printf("Interval:     %s\n", fmt.Sprintf("%d minutes", job.Interval))
+		fmt.Printf("Grace Period: %s\n", fmt.Sprintf("%d minutes", job.GracePeriod))
+		fmt.Printf("\n%s\n", output.Bold("Ping URL:"))
+		fmt.Printf("  %s\n", output.Cyan(fmt.Sprintf("curl https://api.groovekit.com/pings/%s", job.PingToken)))
 
 		return nil
 	},
@@ -169,6 +190,12 @@ var jobsDeleteCmd = &cobra.Command{
 			return err
 		}
 
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
 		// Confirm deletion
 		confirm, _ := cmd.Flags().GetBool("force")
 		if !confirm {
@@ -181,11 +208,11 @@ var jobsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.DeleteJob(args[0]); err != nil {
+		if err := client.DeleteJob(fullID); err != nil {
 			return fmt.Errorf("failed to delete job: %w", err)
 		}
 
-		fmt.Printf("✓ Job %s deleted successfully\n", args[0])
+		output.SuccessMessage(fmt.Sprintf("Job %s deleted successfully", args[0]))
 		return nil
 	},
 }
@@ -210,6 +237,37 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return s[:maxLen-3] + "..."
+}
+
+// Helper function to resolve a short ID to a full ID
+func resolveJobID(client *api.Client, shortID string) (string, error) {
+	// If it looks like a full UUID, use it as-is
+	if len(shortID) >= 32 {
+		return shortID, nil
+	}
+
+	// Otherwise, fetch all jobs and match by prefix
+	result, err := client.ListJobs()
+	if err != nil {
+		return "", fmt.Errorf("failed to list jobs: %w", err)
+	}
+
+	var matches []string
+	for _, job := range result.Jobs {
+		if len(job.ID) >= len(shortID) && job.ID[:len(shortID)] == shortID {
+			matches = append(matches, job.ID)
+		}
+	}
+
+	if len(matches) == 0 {
+		return "", fmt.Errorf("no job found with ID prefix '%s'", shortID)
+	}
+
+	if len(matches) > 1 {
+		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple jobs", shortID)
+	}
+
+	return matches[0], nil
 }
 
 func init() {

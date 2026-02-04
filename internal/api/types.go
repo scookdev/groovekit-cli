@@ -45,37 +45,51 @@ type CreateJobRequest struct {
 }
 
 // Monitor types
-// 
-// Monitor represents a cron job monitor
+
+// Monitor represents an API endpoint monitor
 type Monitor struct {
-	ID             string   `json:"id"`
-	Name           string   `json:"name"`
-	Status         string   `json:"status"`
-	WebhookURL     string   `json:"webhook_url"`
-	WebhookSecret  string   `json:"webhook_secret"`
-	AllowedIPs     []string `json:"allowed_ips"`
-	LastPingAt     *string  `json:"last_ping_at"`
-	LastRunAt      *string  `json:"last_run_at"`
-	LastAlertedAt  *string  `json:"last_alerted_at"`
-	Down           bool     `json:"down"`
-	CreatedAt      string   `json:"created_at"`
-	UpdatedAt      string   `json:"updated_at"`
+	ID                    string        `json:"id"`
+	Name                  string        `json:"name"`
+	URL                   string        `json:"url"`
+	HTTPMethod            string        `json:"http_method"`
+	Headers               interface{}   `json:"headers"`
+	ExpectedStatusCodes   []int         `json:"expected_status_codes"`
+	Timeout               int           `json:"timeout"`
+	Interval              int           `json:"interval"`
+	GracePeriod           int           `json:"grace_period"`
+	Status                string        `json:"status"`
+	APICheckToken         string        `json:"api_check_token"`
+	HasAuthHeaders        bool          `json:"has_auth_headers"`
+	ValidateResponsePaths []string      `json:"validate_response_paths"`
+	JSONSchema            *string       `json:"json_schema"`
+	RequestBody           *string       `json:"request_body"`
+	LastCheckAt           *string       `json:"last_check_at"`
+	ConsecutiveFailures   int           `json:"consecutive_failures"`
+	Down                  bool          `json:"down"`
+	UptimePercentage      *float64      `json:"uptime_percentage"`
+	AverageResponseTime   *float64      `json:"average_response_time"`
+	CreatedAt             string        `json:"created_at"`
+	UpdatedAt             string        `json:"updated_at"`
 }
 
-// JobsResponse represents the response from GET /jobs
+// MonitorsResponse represents the response from GET /api_monitors
 type MonitorsResponse struct {
-	Monitorss       []Monitor `json:"jobs"`
-	HasMore    bool  `json:"has_more"`
-	TotalCount int   `json:"total_count"`
+	APIMonitors []Monitor `json:"api_monitors"`
 }
 
-// JobResponse represents the response from POST/PUT /jobs
+// MonitorResponse represents the response from POST/PUT /api_monitors
 type MonitorResponse struct {
-	Monitor Monitor `json:"job"`
+	APIMonitor Monitor `json:"api_monitor"`
 }
 
-// CreateJobRequest represents the request body for creating a job
+// CreateMonitorRequest represents the request body for creating a monitor
 type CreateMonitorRequest struct {
-	Name          string   `json:"name"`
-	Status        string   `json:"status,omitempty"`
+	Name                  string   `json:"name"`
+	URL                   string   `json:"url"`
+	HTTPMethod            string   `json:"http_method,omitempty"`
+	Interval              int      `json:"interval,omitempty"`
+	ExpectedStatusCodes   []int    `json:"expected_status_codes,omitempty"`
+	Timeout               int      `json:"timeout,omitempty"`
+	GracePeriod           int      `json:"grace_period,omitempty"`
+	Status                string   `json:"status,omitempty"`
 }
