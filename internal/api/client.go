@@ -250,3 +250,12 @@ func (c *Client) ListJobPings(id string) ([]Ping, error) {
 	}
 	return result.Pings, nil
 }
+
+// GetAccount returns account information with subscription and usage
+func (c *Client) GetAccount() (*Account, error) {
+	var account Account
+	if err := c.Get("/users/me", &account); err != nil {
+		return nil, err
+	}
+	return &account, nil
+}

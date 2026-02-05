@@ -114,3 +114,27 @@ type Ping struct {
 	Duration  *int    `json:"duration"`
 	CreatedAt string  `json:"created_at"`
 }
+
+// Account represents user account with subscription and usage
+type Account struct {
+	ID           string              `json:"id"`
+	Email        string              `json:"email"`
+	FirstName    string              `json:"first_name"`
+	LastName     string              `json:"last_name"`
+	FullName     string              `json:"full_name"`
+	JobCount     int                 `json:"job_count"`
+	MonitorCount int                 `json:"monitor_count"`
+	SMSUsed      int                 `json:"sms_used"`
+	Subscription *AccountSubscription `json:"subscription"`
+}
+
+// AccountSubscription represents subscription details
+type AccountSubscription struct {
+	PlanName         string  `json:"plan_name"`
+	Status           string  `json:"status"`
+	CurrentPeriodEnd *string `json:"current_period_end"`
+	MaxJobs          int     `json:"max_jobs"`
+	MaxMonitors      int     `json:"max_monitors"`
+	SMSLimit         int     `json:"sms_limit"`
+	MinCheckInterval int     `json:"min_check_interval"`
+}
