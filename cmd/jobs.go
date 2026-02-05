@@ -3,7 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/config"
 	"github.com/scookdev/groovekit-cli/internal/output"
@@ -27,13 +29,27 @@ var jobsListCmd = &cobra.Command{
 			return err
 		}
 
+		// Check for --json flag first (don't show spinner for JSON output)
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		// Start spinner
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Suffix = " Fetching jobs..."
+			s.Start()
+		}
+
 		result, err := client.ListJobs()
+
+		// Stop spinner
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to list jobs: %w", err)
 		}
-
-		// Check for --json flag
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		if jsonOutput {
 			return outputJSON(result)
 		}
@@ -173,7 +189,13 @@ var jobsCreateCmd = &cobra.Command{
 			GracePeriod: gracePeriod,
 		}
 
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Suffix = " Creating job..."
+		s.Start()
+
 		job, err := client.CreateJob(req)
+		s.Stop()
+
 		if err != nil {
 			return fmt.Errorf("failed to create job: %w", err)
 		}
@@ -186,6 +208,212 @@ var jobsCreateCmd = &cobra.Command{
 		fmt.Printf("\n%s\n", output.Bold("Ping URL:"))
 		fmt.Printf("  %s\n", output.Cyan(fmt.Sprintf("curl https://api.groovekit.io/pings/%s", job.PingToken)))
 
+		return nil
+	},
+}
+
+// jobs update <id>
+var jobsUpdateCmd = &cobra.Command{
+	Use:   "update <id>",
+	Short: "Update a job",
+	Long:  "Update an existing cron job monitor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Build update request with only provided flags
+		req := &api.UpdateJobRequest{}
+		hasUpdates := false
+
+		if cmd.Flags().Changed("name") {
+			name, _ := cmd.Flags().GetString("name")
+			req.Name = &name
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("interval") {
+			interval, _ := cmd.Flags().GetInt("interval")
+			req.Interval = &interval
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("grace-period") {
+			gracePeriod, _ := cmd.Flags().GetInt("grace-period")
+			req.GracePeriod = &gracePeriod
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("status") {
+			status, _ := cmd.Flags().GetString("status")
+			req.Status = &status
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("webhook-url") {
+			webhookURL, _ := cmd.Flags().GetString("webhook-url")
+			req.WebhookURL = &webhookURL
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("webhook-secret") {
+			webhookSecret, _ := cmd.Flags().GetString("webhook-secret")
+			req.WebhookSecret = &webhookSecret
+			hasUpdates = true
+		}
+
+		if !hasUpdates {
+			return fmt.Errorf("no fields to update. Use --name, --interval, --grace-period, --status, --webhook-url, or --webhook-secret")
+		}
+
+		job, err := client.UpdateJob(fullID, req)
+		if err != nil {
+			return fmt.Errorf("failed to update job: %w", err)
+		}
+
+		output.SuccessMessage("Job updated successfully\n")
+		fmt.Printf("ID:           %s\n", output.Cyan(job.ID))
+		fmt.Printf("Name:         %s\n", output.Bold(job.Name))
+		fmt.Printf("Interval:     %s\n", output.FormatDuration(job.Interval))
+		fmt.Printf("Grace Period: %s\n", output.FormatDuration(job.GracePeriod))
+		fmt.Printf("Status:       %s\n", job.Status)
+
+		return nil
+	},
+}
+
+// jobs pause <id>
+var jobsPauseCmd = &cobra.Command{
+	Use:   "pause <id>",
+	Short: "Pause a job",
+	Long:  "Pause a cron job monitor (sets status to paused)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Update status to paused
+		status := "paused"
+		req := &api.UpdateJobRequest{Status: &status}
+
+		if _, err := client.UpdateJob(fullID, req); err != nil {
+			return fmt.Errorf("failed to pause job: %w", err)
+		}
+
+		output.SuccessMessage(fmt.Sprintf("Job %s paused successfully", args[0]))
+		return nil
+	},
+}
+
+// jobs resume <id>
+var jobsResumeCmd = &cobra.Command{
+	Use:   "resume <id>",
+	Short: "Resume a job",
+	Long:  "Resume a paused cron job monitor (sets status to active)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Update status to active
+		status := "active"
+		req := &api.UpdateJobRequest{Status: &status}
+
+		if _, err := client.UpdateJob(fullID, req); err != nil {
+			return fmt.Errorf("failed to resume job: %w", err)
+		}
+
+		output.SuccessMessage(fmt.Sprintf("Job %s resumed successfully", args[0]))
+		return nil
+	},
+}
+
+// jobs incidents <id>
+var jobsIncidentsCmd = &cobra.Command{
+	Use:   "incidents <id>",
+	Short: "Show incident history",
+	Long:  "Display incident history (downtime periods) for a job",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveJobID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		incidents, err := client.ListJobIncidents(fullID)
+		if err != nil {
+			return fmt.Errorf("failed to get incidents: %w", err)
+		}
+
+		if jsonOutput {
+			return outputJSON(incidents)
+		}
+
+		if len(incidents) == 0 {
+			output.InfoMessage("No incidents found - this job has been running smoothly!")
+			return nil
+		}
+
+		// Create table
+		table := output.NewTable([]string{"STARTED", "ENDED", "DURATION", "STATUS"})
+		table.Render()
+
+		// Add rows
+		for _, incident := range incidents {
+			status := output.Red("Ongoing")
+			ended := output.Yellow("Still down")
+
+			if incident.EndedAt != nil {
+				status = output.Green("Recovered")
+				ended = *incident.EndedAt
+			}
+
+			// Format duration
+			duration := formatIncidentDuration(incident.Duration)
+
+			table.Append([]string{
+				incident.StartedAt,
+				ended,
+				duration,
+				status,
+			})
+		}
+
+		table.Flush()
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d incident(s)", len(incidents))))
 		return nil
 	},
 }
@@ -292,6 +520,23 @@ func resolveJobID(client *api.Client, shortID string) (string, error) {
 	return matches[0], nil
 }
 
+// Helper function to format incident duration (seconds to human readable)
+func formatIncidentDuration(seconds float64) string {
+	if seconds < 60 {
+		return fmt.Sprintf("%.0fs", seconds)
+	}
+	minutes := seconds / 60
+	if minutes < 60 {
+		return fmt.Sprintf("%.0fm", minutes)
+	}
+	hours := minutes / 60
+	if hours < 24 {
+		return fmt.Sprintf("%.1fh", hours)
+	}
+	days := hours / 24
+	return fmt.Sprintf("%.1fd", days)
+}
+
 func init() {
 	// Add flags to list command
 	jobsListCmd.Flags().Bool("json", false, "Output as JSON")
@@ -306,6 +551,17 @@ func init() {
 	jobsCreateCmd.MarkFlagRequired("name")
 	jobsCreateCmd.MarkFlagRequired("interval")
 
+	// Add flags to update command
+	jobsUpdateCmd.Flags().String("name", "", "Job name")
+	jobsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
+	jobsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
+	jobsUpdateCmd.Flags().String("status", "", "Job status (active, inactive, paused)")
+	jobsUpdateCmd.Flags().String("webhook-url", "", "Webhook URL")
+	jobsUpdateCmd.Flags().String("webhook-secret", "", "Webhook secret")
+
+	// Add flags to incidents command
+	jobsIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
+
 	// Add flags to delete command
 	jobsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
@@ -313,6 +569,10 @@ func init() {
 	jobsCmd.AddCommand(jobsListCmd)
 	jobsCmd.AddCommand(jobsShowCmd)
 	jobsCmd.AddCommand(jobsCreateCmd)
+	jobsCmd.AddCommand(jobsUpdateCmd)
+	jobsCmd.AddCommand(jobsPauseCmd)
+	jobsCmd.AddCommand(jobsResumeCmd)
+	jobsCmd.AddCommand(jobsIncidentsCmd)
 	jobsCmd.AddCommand(jobsDeleteCmd)
 
 	// Add jobs command to root

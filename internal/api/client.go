@@ -187,6 +187,18 @@ func (c *Client) CreateJob(req *CreateJobRequest) (*Job, error) {
 	return &result.Job, nil
 }
 
+// UpdateJob updates an existing job
+func (c *Client) UpdateJob(id string, req *UpdateJobRequest) (*Job, error) {
+	payload := map[string]interface{}{
+		"job": req,
+	}
+	var result JobResponse
+	if err := c.Put("/jobs/"+id, payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.Job, nil
+}
+
 // DeleteJob deletes a job by ID
 func (c *Client) DeleteJob(id string) error {
 	return c.Delete("/jobs/" + id)
@@ -224,6 +236,18 @@ func (c *Client) CreateMonitor(req *CreateMonitorRequest) (*Monitor, error) {
 	return &result.APIMonitor, nil
 }
 
+// UpdateMonitor updates an existing monitor
+func (c *Client) UpdateMonitor(id string, req *UpdateMonitorRequest) (*Monitor, error) {
+	payload := map[string]interface{}{
+		"api_monitor": req,
+	}
+	var result MonitorResponse
+	if err := c.Put("/api_monitors/"+id, payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.APIMonitor, nil
+}
+
 // DeleteMonitor deletes a monitor by ID
 func (c *Client) DeleteMonitor(id string) error {
 	return c.Delete("/api_monitors/" + id)
@@ -249,6 +273,28 @@ func (c *Client) ListJobPings(id string) ([]Ping, error) {
 		return nil, err
 	}
 	return result.Pings, nil
+}
+
+// ListJobIncidents returns incident history for a job
+func (c *Client) ListJobIncidents(id string) ([]Incident, error) {
+	var result struct {
+		Incidents []Incident `json:"incidents"`
+	}
+	if err := c.Get("/jobs/"+id+"/incidents", &result); err != nil {
+		return nil, err
+	}
+	return result.Incidents, nil
+}
+
+// ListMonitorIncidents returns incident history for a monitor
+func (c *Client) ListMonitorIncidents(id string) ([]Incident, error) {
+	var result struct {
+		Incidents []Incident `json:"incidents"`
+	}
+	if err := c.Get("/api_monitors/"+id+"/incidents", &result); err != nil {
+		return nil, err
+	}
+	return result.Incidents, nil
 }
 
 // GetAccount returns account information with subscription and usage

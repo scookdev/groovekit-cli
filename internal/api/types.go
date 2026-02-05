@@ -44,6 +44,17 @@ type CreateJobRequest struct {
 	AllowedIPs    []string `json:"allowed_ips,omitempty"`
 }
 
+// UpdateJobRequest represents the request body for updating a job
+type UpdateJobRequest struct {
+	Name          *string   `json:"name,omitempty"`
+	Interval      *int      `json:"interval,omitempty"`
+	GracePeriod   *int      `json:"grace_period,omitempty"`
+	Status        *string   `json:"status,omitempty"`
+	WebhookURL    *string   `json:"webhook_url,omitempty"`
+	WebhookSecret *string   `json:"webhook_secret,omitempty"`
+	AllowedIPs    *[]string `json:"allowed_ips,omitempty"`
+}
+
 // Monitor types
 
 // Monitor represents an API endpoint monitor
@@ -94,6 +105,18 @@ type CreateMonitorRequest struct {
 	Status                string   `json:"status,omitempty"`
 }
 
+// UpdateMonitorRequest represents the request body for updating a monitor
+type UpdateMonitorRequest struct {
+	Name                *string `json:"name,omitempty"`
+	URL                 *string `json:"url,omitempty"`
+	HTTPMethod          *string `json:"http_method,omitempty"`
+	Interval            *int    `json:"interval,omitempty"`
+	ExpectedStatusCodes *[]int  `json:"expected_status_codes,omitempty"`
+	Timeout             *int    `json:"timeout,omitempty"`
+	GracePeriod         *int    `json:"grace_period,omitempty"`
+	Status              *string `json:"status,omitempty"`
+}
+
 // ApiCheck represents an API health check result
 type ApiCheck struct {
 	ID              string  `json:"id"`
@@ -111,8 +134,17 @@ type Ping struct {
 	ID        string  `json:"id"`
 	JobID     string  `json:"job_id"`
 	PingType  string  `json:"ping_type"`
-	Duration  *int    `json:"duration"`
+	Duration  *string `json:"duration"`
 	CreatedAt string  `json:"created_at"`
+}
+
+// Incident represents a downtime incident
+type Incident struct {
+	StartedAt    string   `json:"started_at"`
+	EndedAt      *string  `json:"ended_at"`
+	Duration     float64  `json:"duration"`
+	Type         string   `json:"type"`
+	ErrorMessage *string  `json:"error_message,omitempty"`
 }
 
 // Account represents user account with subscription and usage

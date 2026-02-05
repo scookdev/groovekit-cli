@@ -199,6 +199,232 @@ var monitorsCreateCmd = &cobra.Command{
 	},
 }
 
+// monitors update <id>
+var monitorsUpdateCmd = &cobra.Command{
+	Use:   "update <id>",
+	Short: "Update a monitor",
+	Long:  "Update an existing API endpoint monitor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Build update request with only provided flags
+		req := &api.UpdateMonitorRequest{}
+		hasUpdates := false
+
+		if cmd.Flags().Changed("name") {
+			name, _ := cmd.Flags().GetString("name")
+			req.Name = &name
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("url") {
+			url, _ := cmd.Flags().GetString("url")
+			req.URL = &url
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("http-method") {
+			method, _ := cmd.Flags().GetString("http-method")
+			req.HTTPMethod = &method
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("interval") {
+			interval, _ := cmd.Flags().GetInt("interval")
+			req.Interval = &interval
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("timeout") {
+			timeout, _ := cmd.Flags().GetInt("timeout")
+			req.Timeout = &timeout
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("grace-period") {
+			gracePeriod, _ := cmd.Flags().GetInt("grace-period")
+			req.GracePeriod = &gracePeriod
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("status") {
+			status, _ := cmd.Flags().GetString("status")
+			req.Status = &status
+			hasUpdates = true
+		}
+
+		if cmd.Flags().Changed("expected-status-codes") {
+			codes, _ := cmd.Flags().GetIntSlice("expected-status-codes")
+			req.ExpectedStatusCodes = &codes
+			hasUpdates = true
+		}
+
+		if !hasUpdates {
+			return fmt.Errorf("no fields to update. Use --name, --url, --http-method, --interval, --timeout, --grace-period, --status, or --expected-status-codes")
+		}
+
+		monitor, err := client.UpdateMonitor(fullID, req)
+		if err != nil {
+			return fmt.Errorf("failed to update monitor: %w", err)
+		}
+
+		output.SuccessMessage("Monitor updated successfully\n")
+		fmt.Printf("ID:       %s\n", output.Cyan(monitor.ID))
+		fmt.Printf("Name:     %s\n", output.Bold(monitor.Name))
+		fmt.Printf("URL:      %s\n", monitor.URL)
+		fmt.Printf("Method:   %s\n", monitor.HTTPMethod)
+		fmt.Printf("Interval: %s\n", output.FormatDuration(monitor.Interval))
+		fmt.Printf("Status:   %s\n", monitor.Status)
+
+		return nil
+	},
+}
+
+// monitors pause <id>
+var monitorsPauseCmd = &cobra.Command{
+	Use:   "pause <id>",
+	Short: "Pause a monitor",
+	Long:  "Pause an API endpoint monitor (sets status to paused)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Update status to paused
+		status := "paused"
+		req := &api.UpdateMonitorRequest{Status: &status}
+
+		if _, err := client.UpdateMonitor(fullID, req); err != nil {
+			return fmt.Errorf("failed to pause monitor: %w", err)
+		}
+
+		output.SuccessMessage(fmt.Sprintf("Monitor %s paused successfully", args[0]))
+		return nil
+	},
+}
+
+// monitors resume <id>
+var monitorsResumeCmd = &cobra.Command{
+	Use:   "resume <id>",
+	Short: "Resume a monitor",
+	Long:  "Resume a paused API endpoint monitor (sets status to active)",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Update status to active
+		status := "active"
+		req := &api.UpdateMonitorRequest{Status: &status}
+
+		if _, err := client.UpdateMonitor(fullID, req); err != nil {
+			return fmt.Errorf("failed to resume monitor: %w", err)
+		}
+
+		output.SuccessMessage(fmt.Sprintf("Monitor %s resumed successfully", args[0]))
+		return nil
+	},
+}
+
+// monitors incidents <id>
+var monitorsIncidentsCmd = &cobra.Command{
+	Use:   "incidents <id>",
+	Short: "Show incident history",
+	Long:  "Display incident history (downtime periods) for a monitor",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := getAuthenticatedClient()
+		if err != nil {
+			return err
+		}
+
+		// Resolve short ID to full ID
+		fullID, err := resolveMonitorID(client, args[0])
+		if err != nil {
+			return err
+		}
+
+		// Check for --json flag
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		incidents, err := client.ListMonitorIncidents(fullID)
+		if err != nil {
+			return fmt.Errorf("failed to get incidents: %w", err)
+		}
+
+		if jsonOutput {
+			return outputJSON(incidents)
+		}
+
+		if len(incidents) == 0 {
+			output.InfoMessage("No incidents found - this monitor has been running smoothly!")
+			return nil
+		}
+
+		// Create table
+		table := output.NewTable([]string{"STARTED", "ENDED", "DURATION", "STATUS", "ERROR"})
+		table.Render()
+
+		// Add rows
+		for _, incident := range incidents {
+			status := output.Red("Ongoing")
+			ended := output.Yellow("Still down")
+
+			if incident.EndedAt != nil {
+				status = output.Green("Recovered")
+				ended = *incident.EndedAt
+			}
+
+			// Format duration
+			duration := formatIncidentDuration(incident.Duration)
+
+			// Truncate error message
+			errorMsg := "-"
+			if incident.ErrorMessage != nil {
+				errorMsg = truncate(*incident.ErrorMessage, 40)
+			}
+
+			table.Append([]string{
+				incident.StartedAt,
+				ended,
+				duration,
+				status,
+				errorMsg,
+			})
+		}
+
+		table.Flush()
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d incident(s)", len(incidents))))
+		return nil
+	},
+}
+
 // monitors delete <id>
 var monitorsDeleteCmd = &cobra.Command{
 	Use:   "delete <id>",
@@ -284,6 +510,19 @@ func init() {
 	monitorsCreateCmd.MarkFlagRequired("name")
 	monitorsCreateCmd.MarkFlagRequired("url")
 
+	// Add flags to update command
+	monitorsUpdateCmd.Flags().String("name", "", "Monitor name")
+	monitorsUpdateCmd.Flags().String("url", "", "URL to monitor")
+	monitorsUpdateCmd.Flags().String("http-method", "", "HTTP method (GET, POST, etc)")
+	monitorsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
+	monitorsUpdateCmd.Flags().Int("timeout", 0, "Request timeout in seconds")
+	monitorsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
+	monitorsUpdateCmd.Flags().String("status", "", "Monitor status (active, inactive, paused)")
+	monitorsUpdateCmd.Flags().IntSlice("expected-status-codes", nil, "Expected HTTP status codes (comma-separated)")
+
+	// Add flags to incidents command
+	monitorsIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
+
 	// Add flags to delete command
 	monitorsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
@@ -291,6 +530,10 @@ func init() {
 	monitorsCmd.AddCommand(monitorsListCmd)
 	monitorsCmd.AddCommand(monitorsShowCmd)
 	monitorsCmd.AddCommand(monitorsCreateCmd)
+	monitorsCmd.AddCommand(monitorsUpdateCmd)
+	monitorsCmd.AddCommand(monitorsPauseCmd)
+	monitorsCmd.AddCommand(monitorsResumeCmd)
+	monitorsCmd.AddCommand(monitorsIncidentsCmd)
 	monitorsCmd.AddCommand(monitorsDeleteCmd)
 
 	// Add monitors command to root

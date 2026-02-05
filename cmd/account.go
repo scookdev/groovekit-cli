@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +28,21 @@ var accountShowCmd = &cobra.Command{
 
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
+		// Start spinner
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Suffix = " Fetching account info..."
+			s.Start()
+		}
+
 		account, err := client.GetAccount()
+
+		// Stop spinner
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to get account: %w", err)
 		}

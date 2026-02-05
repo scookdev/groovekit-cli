@@ -80,30 +80,8 @@ var logoutCmd = &cobra.Command{
 	},
 }
 
-var whoamiCmd = &cobra.Command{
-	Use:   "whoami",
-	Short: "Show current user",
-	Long:  "Display the email of the currently authenticated user",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		cfg, err := config.Load()
-		if err != nil {
-			return fmt.Errorf("failed to load config: %w", err)
-		}
-
-		if !cfg.IsAuthenticated() {
-			fmt.Println("Not logged in")
-			fmt.Println("Run 'groovekit auth login' to authenticate")
-			return nil
-		}
-
-		fmt.Printf("Logged in as: %s\n", cfg.Email)
-		return nil
-	},
-}
-
 func init() {
 	authCmd.AddCommand(loginCmd)
 	authCmd.AddCommand(logoutCmd)
-	authCmd.AddCommand(whoamiCmd)
 	rootCmd.AddCommand(authCmd)
 }

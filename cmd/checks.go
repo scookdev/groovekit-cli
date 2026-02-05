@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/output"
@@ -127,8 +128,14 @@ func listJobPings(client *api.Client, jobID string, jsonOutput bool) error {
 		}
 
 		duration := "-"
-		if ping.Duration != nil {
-			duration = fmt.Sprintf("%dms", *ping.Duration)
+		if ping.Duration != nil && *ping.Duration != "" {
+			// Parse duration string (in seconds) and convert to milliseconds
+			if durationFloat, err := strconv.ParseFloat(*ping.Duration, 64); err == nil {
+				durationMs := durationFloat * 1000
+				duration = fmt.Sprintf("%.0fms", durationMs)
+			} else {
+				duration = *ping.Duration
+			}
 		}
 
 		table.Append([]string{
