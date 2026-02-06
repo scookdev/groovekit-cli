@@ -44,7 +44,8 @@ changelog:
   disable: true
 
 brews:
-  - repository:
+  - name: groovekit
+    repository:
       owner: scookdev
       name: homebrew-groovekit
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
