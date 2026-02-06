@@ -69,18 +69,27 @@ var accountShowCmd = &cobra.Command{
 
 			// Jobs
 			jobUsage := fmt.Sprintf("%d / %d", account.JobCount, account.Subscription.MaxJobs)
-			jobPercent := float64(account.JobCount) / float64(account.Subscription.MaxJobs) * 100
+			jobPercent := 0.0
+			if account.Subscription.MaxJobs > 0 {
+				jobPercent = float64(account.JobCount) / float64(account.Subscription.MaxJobs) * 100
+			}
 			fmt.Printf("Jobs:             %s %s\n", jobUsage, formatUsageBar(jobPercent))
 
 			// Monitors
 			monitorUsage := fmt.Sprintf("%d / %d", account.MonitorCount, account.Subscription.MaxMonitors)
-			monitorPercent := float64(account.MonitorCount) / float64(account.Subscription.MaxMonitors) * 100
+			monitorPercent := 0.0
+			if account.Subscription.MaxMonitors > 0 {
+				monitorPercent = float64(account.MonitorCount) / float64(account.Subscription.MaxMonitors) * 100
+			}
 			fmt.Printf("Monitors:         %s %s\n", monitorUsage, formatUsageBar(monitorPercent))
 
 			// SMS
 			if account.Subscription.SMSLimit > 0 {
 				smsUsage := fmt.Sprintf("%d / %d", account.SMSUsed, account.Subscription.SMSLimit)
-				smsPercent := float64(account.SMSUsed) / float64(account.Subscription.SMSLimit) * 100
+				smsPercent := 0.0
+				if account.Subscription.SMSLimit > 0 {
+					smsPercent = float64(account.SMSUsed) / float64(account.Subscription.SMSLimit) * 100
+				}
 				fmt.Printf("SMS this month:   %s %s\n", smsUsage, formatUsageBar(smsPercent))
 			} else {
 				fmt.Printf("SMS this month:   %s\n", output.Yellow("Not available on this plan"))
