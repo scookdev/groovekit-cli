@@ -1,12 +1,9 @@
-version: 2
+version: "2"
+
+run:
+  timeout: 5m
 
 linters:
   disable:
     - dupl
     - gosec
-
-linters-settings:
-  revive:
-    rules:
-      - name: var-naming
-        disabled: true
