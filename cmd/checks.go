@@ -88,7 +88,7 @@ func listMonitorChecks(client *api.Client, monitorID string, jsonOutput bool) er
 	// Add rows
 	for _, check := range checks {
 		statusCode := fmt.Sprintf("%d", check.StatusCode)
-		responseTime := fmt.Sprintf("%dms", check.ResponseTime)
+		responseTime := fmt.Sprintf("%.2fms", check.ResponseTime)
 
 		success := output.Green("✓")
 		if !check.Success {

@@ -122,7 +122,7 @@ type ApiCheck struct {
 	ID              string  `json:"id"`
 	APIMonitorID    string  `json:"api_monitor_id"`
 	StatusCode      int     `json:"status_code"`
-	ResponseTime    int     `json:"response_time"`
+	ResponseTime    float64 `json:"response_time"`
 	Success         bool    `json:"success"`
 	ErrorMessage    *string `json:"error_message"`
 	ValidationError *string `json:"validation_error"`
