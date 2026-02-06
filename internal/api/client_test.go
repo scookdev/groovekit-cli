@@ -31,7 +31,7 @@ func TestLogin_Success(t *testing.T) {
 
 		// Send success response
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(map[string]string{
+		_ = json.NewEncoder(w).Encode(map[string]string{
 			"access_token": "mock-token-123",
 		})
 	}))
@@ -54,9 +54,9 @@ func TestLogin_Success(t *testing.T) {
 // TestLogin_InvalidCredentials tests login with wrong credentials
 func TestLogin_InvalidCredentials(t *testing.T) {
 	// Create a mock HTTP server that returns 401
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"error": "Invalid credentials"}`))
+		_, _ = w.Write([]byte(`{"error": "Invalid credentials"}`))
 	}))
 	defer server.Close()
 
@@ -76,9 +76,9 @@ func TestLogin_InvalidCredentials(t *testing.T) {
 // TestLogin_ServerError tests handling of server errors
 func TestLogin_ServerError(t *testing.T) {
 	// Create a mock HTTP server that returns 500
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		_, _ = w.Write([]byte("Internal Server Error"))
 	}))
 	defer server.Close()
 

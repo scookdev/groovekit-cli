@@ -22,7 +22,7 @@ var checksListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List recent checks",
 	Long:  "List recent health checks for a monitor or pings for a job",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err

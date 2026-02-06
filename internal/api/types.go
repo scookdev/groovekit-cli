@@ -117,8 +117,9 @@ type UpdateMonitorRequest struct {
 	Status              *string `json:"status,omitempty"`
 }
 
-// ApiCheck represents an API health check result
-type ApiCheck struct {
+// Check represents an API health check result
+// Check represents an API health check result
+type Check struct {
 	ID              string  `json:"id"`
 	APIMonitorID    string  `json:"api_monitor_id"`
 	StatusCode      int     `json:"status_code"`

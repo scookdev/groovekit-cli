@@ -24,15 +24,15 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to GrooveKit",
 	Long:  "Authenticate with your GrooveKit account and save credentials locally",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		// Prompt for email
 		fmt.Print("Email: ")
 		var email string
-		fmt.Scanln(&email)
+		_, _ = fmt.Scanln(&email)
 
 		// Prompt for password (hidden)
 		fmt.Print("Password: ")
-		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
+		passwordBytes, err := term.ReadPassword(syscall.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to read password: %w", err)
 		}
@@ -73,7 +73,7 @@ var logoutCmd = &cobra.Command{
 	Use:   "logout",
 	Short: "Logout from GrooveKit",
 	Long:  "Remove locally stored credentials",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, _ []string) error {
 		if err := config.Clear(); err != nil {
 			if os.IsNotExist(err) {
 				fmt.Println("Not currently logged in")

@@ -1,3 +1,4 @@
+// Package output provides formatted output utilities for the CLI
 package output
 
 import (

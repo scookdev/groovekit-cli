@@ -23,7 +23,7 @@ var jobsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all jobs",
 	Long:  "List all cron job monitors for your account",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -175,7 +175,7 @@ var jobsCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new job",
 	Long:  "Create a new cron job heartbeat monitor",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -308,7 +308,7 @@ var jobsPauseCmd = &cobra.Command{
 	Short: "Pause a job",
 	Long:  "Pause a cron job monitor (sets status to paused)",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -344,7 +344,7 @@ var jobsResumeCmd = &cobra.Command{
 	Short: "Resume a job",
 	Long:  "Resume a paused cron job monitor (sets status to active)",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -474,7 +474,7 @@ var jobsDeleteCmd = &cobra.Command{
 		if !confirm {
 			fmt.Printf("Are you sure you want to delete job %s? (y/N): ", args[0])
 			var response string
-			fmt.Scanln(&response)
+			_, _ = fmt.Scanln(&response)
 			if response != "y" && response != "Y" {
 				fmt.Println("Cancelled")
 				return nil
@@ -586,8 +586,8 @@ func init() {
 	jobsCreateCmd.Flags().String("name", "", "Job name (required)")
 	jobsCreateCmd.Flags().Int("interval", 0, "Check interval in minutes (required)")
 	jobsCreateCmd.Flags().Int("grace-period", 5, "Grace period in minutes")
-	jobsCreateCmd.MarkFlagRequired("name")
-	jobsCreateCmd.MarkFlagRequired("interval")
+	_ = jobsCreateCmd.MarkFlagRequired("name")
+	_ = jobsCreateCmd.MarkFlagRequired("interval")
 
 	// Add flags to update command
 	jobsUpdateCmd.Flags().String("name", "", "Job name")

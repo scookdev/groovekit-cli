@@ -1,3 +1,4 @@
+// Package api provides the HTTP client for interacting with the GrooveKit API
 package api
 
 import (
@@ -11,6 +12,7 @@ import (
 	"github.com/scookdev/groovekit-cli/internal/config"
 )
 
+// Client represents an HTTP client for the GrooveKit API
 type Client struct {
 	BaseURL    string
 	HTTPClient *http.Client
@@ -49,7 +51,7 @@ func (c *Client) Login(email, password string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("login request failed: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -92,7 +94,7 @@ func (c *Client) doRequest(method, path string, body interface{}, result interfa
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
@@ -135,22 +137,22 @@ func (c *Client) doRequest(method, path string, body interface{}, result interfa
 	return nil
 }
 
-// GET request
+// Get performs a GET request to the API
 func (c *Client) Get(path string, result interface{}) error {
 	return c.doRequest("GET", path, nil, result)
 }
 
-// POST request
+// Post performs a POST request to the API
 func (c *Client) Post(path string, body interface{}, result interface{}) error {
 	return c.doRequest("POST", path, body, result)
 }
 
-// PUT request
+// Put performs a PUT request to the API
 func (c *Client) Put(path string, body interface{}, result interface{}) error {
 	return c.doRequest("PUT", path, body, result)
 }
 
-// DELETE request
+// Delete performs a DELETE request to the API
 func (c *Client) Delete(path string) error {
 	return c.doRequest("DELETE", path, nil, nil)
 }
@@ -254,9 +256,9 @@ func (c *Client) DeleteMonitor(id string) error {
 }
 
 // ListMonitorChecks returns recent checks for a monitor
-func (c *Client) ListMonitorChecks(id string) ([]ApiCheck, error) {
+func (c *Client) ListMonitorChecks(id string) ([]Check, error) {
 	var result struct {
-		APIChecks []ApiCheck `json:"api_checks"`
+		APIChecks []Check `json:"api_checks"`
 	}
 	if err := c.Get("/api_monitors/"+id+"/api_checks", &result); err != nil {
 		return nil, err

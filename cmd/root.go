@@ -16,6 +16,7 @@ Verify your services are working correctly with heartbeat monitoring,
 JSON Schema validation, GraphQL support, and instant alerts.`,
 }
 
+// Execute runs the root command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

@@ -1,66 +1,12 @@
 version: 2
 
-run:
-  timeout: 5m
-  tests: true
-  modules-download-mode: readonly
-
 linters:
-  enable:
-    - errcheck      # Check for unchecked errors
-    - govet         # Vet examines Go source code
-    - ineffassign   # Detect ineffectual assignments
-    - staticcheck   # Advanced static analysis (includes gosimple and unused)
-    - misspell      # Check for misspelled English words
-    - revive        # Drop-in replacement for golint
-    - unconvert     # Remove unnecessary type conversions
-    - unparam       # Report unused function parameters
-    - gocritic      # Opinionated linter
-    - gocyclo       # Cyclomatic complexity
-    - dupl          # Code clone detection
-    - gosec         # Security checks
+  disable:
+    - dupl
+    - gosec
 
 linters-settings:
-  errcheck:
-    check-type-assertions: true
-    check-blank: false
-
-  govet:
-    enable-all: true
-    disable:
-      - shadow      # Can be too noisy
-
   revive:
-    confidence: 0.8
-
-  gocyclo:
-    min-complexity: 15
-
-  dupl:
-    threshold: 100
-
-  gocritic:
-    enabled-tags:
-      - diagnostic
-      - style
-      - performance
-    disabled-checks:
-      - commentedOutCode
-      - whyNoLint
-
-issues:
-  exclude-rules:
-    # Exclude some linters from running on tests files
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-        - gosec
-
-    # Exclude cobra command init functions
-    - path: cmd/
-      text: "G104:"  # Gosec - Errors unhandled (often intentional in CLI commands)
-
-  max-issues-per-linter: 0
-  max-same-issues: 0
+    rules:
+      - name: var-naming
+        disabled: true

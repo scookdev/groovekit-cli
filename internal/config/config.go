@@ -1,3 +1,4 @@
+// Package config handles configuration file management for the CLI
 package config
 
 import (
@@ -7,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// Config stores the CLI configuration including API credentials
 type Config struct {
 	APIBaseURL  string `json:"api_base_url"`
 	AccessToken string `json:"access_token"`

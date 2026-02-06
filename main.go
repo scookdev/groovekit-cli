@@ -1,3 +1,4 @@
+// Package main is the entry point for the GrooveKit CLI
 package main
 
 import "github.com/scookdev/groovekit-cli/cmd"

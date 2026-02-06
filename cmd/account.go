@@ -1,3 +1,4 @@
+// Package cmd provides the command-line interface commands for GrooveKit CLI
 package cmd
 
 import (
@@ -20,7 +21,7 @@ var accountShowCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Show account details",
 	Long:  "Display your account information, plan limits, and current usage",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -127,11 +128,12 @@ func formatUsageBar(percent float64) string {
 	bar := "["
 	for i := 0; i < barLength; i++ {
 		if i < filled {
-			if percent >= 90 {
+			switch {
+			case percent >= 90:
 				bar += output.Red("█")
-			} else if percent >= 75 {
+			case percent >= 75:
 				bar += output.Yellow("█")
-			} else {
+			default:
 				bar += output.Green("█")
 			}
 		} else {

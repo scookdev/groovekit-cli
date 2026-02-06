@@ -21,7 +21,7 @@ var monitorsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all monitors",
 	Long:  "List all API endpoint monitors for your account",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -179,7 +179,7 @@ var monitorsCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "Create a new monitor",
 	Long:  "Create a new API endpoint monitor",
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -328,7 +328,7 @@ var monitorsPauseCmd = &cobra.Command{
 	Short: "Pause a monitor",
 	Long:  "Pause an API endpoint monitor (sets status to paused)",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -364,7 +364,7 @@ var monitorsResumeCmd = &cobra.Command{
 	Short: "Resume a monitor",
 	Long:  "Resume a paused API endpoint monitor (sets status to active)",
 	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
+	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
 			return err
@@ -501,7 +501,7 @@ var monitorsDeleteCmd = &cobra.Command{
 		if !confirm {
 			fmt.Printf("Are you sure you want to delete monitor %s? (y/N): ", args[0])
 			var response string
-			fmt.Scanln(&response)
+			_, _ = fmt.Scanln(&response)
 			if response != "y" && response != "Y" {
 				fmt.Println("Cancelled")
 				return nil
@@ -565,8 +565,8 @@ func init() {
 	monitorsCreateCmd.Flags().String("url", "", "URL to monitor (required)")
 	monitorsCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
 	monitorsCreateCmd.Flags().String("method", "GET", "HTTP method")
-	monitorsCreateCmd.MarkFlagRequired("name")
-	monitorsCreateCmd.MarkFlagRequired("url")
+	_ = monitorsCreateCmd.MarkFlagRequired("name")
+	_ = monitorsCreateCmd.MarkFlagRequired("url")
 
 	// Add flags to update command
 	monitorsUpdateCmd.Flags().String("name", "", "Monitor name")
