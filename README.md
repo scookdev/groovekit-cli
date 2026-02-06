@@ -154,7 +154,3 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## About
-
-Built with ❤️ by the [GrooveKit](https://groovekit.io) team.
