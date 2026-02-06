@@ -32,7 +32,8 @@ var loginCmd = &cobra.Command{
 
 		// Prompt for password (hidden)
 		fmt.Print("Password: ")
-		passwordBytes, err := term.ReadPassword(syscall.Stdin)
+		//nolint:unconvert // int() conversion needed for Windows compatibility
+		passwordBytes, err := term.ReadPassword(int(syscall.Stdin))
 		if err != nil {
 			return fmt.Errorf("failed to read password: %w", err)
 		}
