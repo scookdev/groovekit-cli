@@ -3,7 +3,9 @@ package cmd
 import (
 	"fmt"
 	"strconv"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
@@ -54,7 +56,18 @@ func listMonitorChecks(client *api.Client, monitorID string, jsonOutput bool) er
 		return err
 	}
 
+	var s *spinner.Spinner
+	if !jsonOutput {
+		s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+	}
+
 	checks, err := client.ListMonitorChecks(fullID)
+
+	if s != nil {
+		s.Stop()
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to list checks: %w", err)
 	}
@@ -102,7 +115,18 @@ func listJobPings(client *api.Client, jobID string, jsonOutput bool) error {
 		return err
 	}
 
+	var s *spinner.Spinner
+	if !jsonOutput {
+		s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+	}
+
 	pings, err := client.ListJobPings(fullID)
+
+	if s != nil {
+		s.Stop()
+	}
+
 	if err != nil {
 		return fmt.Errorf("failed to list pings: %w", err)
 	}

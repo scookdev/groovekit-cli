@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/output"
 	"github.com/spf13/cobra"
@@ -25,13 +27,24 @@ var monitorsListCmd = &cobra.Command{
 			return err
 		}
 
+		// Check for --json flag first
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Start()
+		}
+
 		result, err := client.ListMonitors()
+
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to list monitors: %w", err)
 		}
-
-		// Check for --json flag
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		if jsonOutput {
 			return outputJSON(result)
 		}
@@ -99,13 +112,24 @@ var monitorsShowCmd = &cobra.Command{
 			return err
 		}
 
+		// Check for --json flag first
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Start()
+		}
+
 		monitor, err := client.GetMonitor(fullID)
+
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to get monitor: %w", err)
 		}
-
-		// Check for --json flag
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		if jsonOutput {
 			return outputJSON(monitor)
 		}
@@ -184,7 +208,11 @@ var monitorsCreateCmd = &cobra.Command{
 			HTTPMethod: method,
 		}
 
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
 		monitor, err := client.CreateMonitor(req)
+		s.Stop()
+
 		if err != nil {
 			return fmt.Errorf("failed to create monitor: %w", err)
 		}
@@ -273,7 +301,11 @@ var monitorsUpdateCmd = &cobra.Command{
 			return fmt.Errorf("no fields to update. Use --name, --url, --http-method, --interval, --timeout, --grace-period, --status, or --expected-status-codes")
 		}
 
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
 		monitor, err := client.UpdateMonitor(fullID, req)
+		s.Stop()
+
 		if err != nil {
 			return fmt.Errorf("failed to update monitor: %w", err)
 		}
@@ -312,7 +344,12 @@ var monitorsPauseCmd = &cobra.Command{
 		status := "paused"
 		req := &api.UpdateMonitorRequest{Status: &status}
 
-		if _, err := client.UpdateMonitor(fullID, req); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		_, err = client.UpdateMonitor(fullID, req)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to pause monitor: %w", err)
 		}
 
@@ -343,7 +380,12 @@ var monitorsResumeCmd = &cobra.Command{
 		status := "active"
 		req := &api.UpdateMonitorRequest{Status: &status}
 
-		if _, err := client.UpdateMonitor(fullID, req); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		_, err = client.UpdateMonitor(fullID, req)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to resume monitor: %w", err)
 		}
 
@@ -373,7 +415,18 @@ var monitorsIncidentsCmd = &cobra.Command{
 		// Check for --json flag
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Start()
+		}
+
 		incidents, err := client.ListMonitorIncidents(fullID)
+
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to get incidents: %w", err)
 		}
@@ -455,7 +508,12 @@ var monitorsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.DeleteMonitor(fullID); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		err = client.DeleteMonitor(fullID)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to delete monitor: %w", err)
 		}
 

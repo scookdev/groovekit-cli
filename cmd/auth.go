@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"syscall"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/scookdev/groovekit-cli/internal/api"
 	"github.com/scookdev/groovekit-cli/internal/config"
 	"github.com/scookdev/groovekit-cli/internal/output"
@@ -45,7 +47,12 @@ var loginCmd = &cobra.Command{
 
 		// Create API client and login
 		client := api.NewClient(cfg)
+
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
 		token, err := client.Login(email, password)
+		s.Stop()
+
 		if err != nil {
 			return fmt.Errorf("login failed: %w", err)
 		}

@@ -36,7 +36,6 @@ var jobsListCmd = &cobra.Command{
 		var s *spinner.Spinner
 		if !jsonOutput {
 			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-			s.Suffix = " Fetching jobs..."
 			s.Start()
 		}
 
@@ -116,13 +115,24 @@ var jobsShowCmd = &cobra.Command{
 			return err
 		}
 
+		// Check for --json flag first
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Start()
+		}
+
 		job, err := client.GetJob(fullID)
+
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to get job: %w", err)
 		}
-
-		// Check for --json flag
-		jsonOutput, _ := cmd.Flags().GetBool("json")
 		if jsonOutput {
 			return outputJSON(job)
 		}
@@ -190,9 +200,7 @@ var jobsCreateCmd = &cobra.Command{
 		}
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-		s.Suffix = " Creating job..."
 		s.Start()
-
 		job, err := client.CreateJob(req)
 		s.Stop()
 
@@ -274,7 +282,11 @@ var jobsUpdateCmd = &cobra.Command{
 			return fmt.Errorf("no fields to update. Use --name, --interval, --grace-period, --status, --webhook-url, or --webhook-secret")
 		}
 
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
 		job, err := client.UpdateJob(fullID, req)
+		s.Stop()
+
 		if err != nil {
 			return fmt.Errorf("failed to update job: %w", err)
 		}
@@ -312,7 +324,12 @@ var jobsPauseCmd = &cobra.Command{
 		status := "paused"
 		req := &api.UpdateJobRequest{Status: &status}
 
-		if _, err := client.UpdateJob(fullID, req); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		_, err = client.UpdateJob(fullID, req)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to pause job: %w", err)
 		}
 
@@ -343,7 +360,12 @@ var jobsResumeCmd = &cobra.Command{
 		status := "active"
 		req := &api.UpdateJobRequest{Status: &status}
 
-		if _, err := client.UpdateJob(fullID, req); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		_, err = client.UpdateJob(fullID, req)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to resume job: %w", err)
 		}
 
@@ -373,7 +395,18 @@ var jobsIncidentsCmd = &cobra.Command{
 		// Check for --json flag
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
+		var s *spinner.Spinner
+		if !jsonOutput {
+			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+			s.Start()
+		}
+
 		incidents, err := client.ListJobIncidents(fullID)
+
+		if s != nil {
+			s.Stop()
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to get incidents: %w", err)
 		}
@@ -448,7 +481,12 @@ var jobsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.DeleteJob(fullID); err != nil {
+		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+		s.Start()
+		err = client.DeleteJob(fullID)
+		s.Stop()
+
+		if err != nil {
 			return fmt.Errorf("failed to delete job: %w", err)
 		}
 

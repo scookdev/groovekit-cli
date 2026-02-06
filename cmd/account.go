@@ -32,7 +32,6 @@ var accountShowCmd = &cobra.Command{
 		var s *spinner.Spinner
 		if !jsonOutput {
 			s = spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-			s.Suffix = " Fetching account info..."
 			s.Start()
 		}
 
