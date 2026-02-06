@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	APIBaseURL   string `json:"api_base_url"`
-	AccessToken  string `json:"access_token"`
-	Email        string `json:"email"`
+	APIBaseURL  string `json:"api_base_url"`
+	AccessToken string `json:"access_token"`
+	Email       string `json:"email"`
 }
 
 var configDir = filepath.Join(os.Getenv("HOME"), ".groovekit")
