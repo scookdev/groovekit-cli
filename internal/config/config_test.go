@@ -8,8 +8,14 @@ import (
 func TestLoad_WithTokenEnvVar(t *testing.T) {
 	// Set up test environment variable
 	testToken := "test-token-12345"
-	os.Setenv("GROOVEKIT_TOKEN", testToken)
-	defer os.Unsetenv("GROOVEKIT_TOKEN")
+	if err := os.Setenv("GROOVEKIT_TOKEN", testToken); err != nil {
+		t.Fatalf("Failed to set GROOVEKIT_TOKEN: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("GROOVEKIT_TOKEN"); err != nil {
+			t.Errorf("Failed to unset GROOVEKIT_TOKEN: %v", err)
+		}
+	}()
 
 	// Load config (may not have config file, that's ok)
 	cfg, err := Load()
@@ -26,8 +32,14 @@ func TestLoad_WithTokenEnvVar(t *testing.T) {
 func TestLoad_WithAPIURLEnvVar(t *testing.T) {
 	// Set up test environment variable
 	testURL := "http://localhost:3000"
-	os.Setenv("GROOVEKIT_API_URL", testURL)
-	defer os.Unsetenv("GROOVEKIT_API_URL")
+	if err := os.Setenv("GROOVEKIT_API_URL", testURL); err != nil {
+		t.Fatalf("Failed to set GROOVEKIT_API_URL: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("GROOVEKIT_API_URL"); err != nil {
+			t.Errorf("Failed to unset GROOVEKIT_API_URL: %v", err)
+		}
+	}()
 
 	// Load config
 	cfg, err := Load()
@@ -47,10 +59,22 @@ func TestLoad_EnvVarsTakePrecedence(t *testing.T) {
 	testToken := "env-token-wins"
 	testURL := "http://env-url-wins:8080"
 
-	os.Setenv("GROOVEKIT_TOKEN", testToken)
-	os.Setenv("GROOVEKIT_API_URL", testURL)
-	defer os.Unsetenv("GROOVEKIT_TOKEN")
-	defer os.Unsetenv("GROOVEKIT_API_URL")
+	if err := os.Setenv("GROOVEKIT_TOKEN", testToken); err != nil {
+		t.Fatalf("Failed to set GROOVEKIT_TOKEN: %v", err)
+	}
+	if err := os.Setenv("GROOVEKIT_API_URL", testURL); err != nil {
+		t.Fatalf("Failed to set GROOVEKIT_API_URL: %v", err)
+	}
+	defer func() {
+		if err := os.Unsetenv("GROOVEKIT_TOKEN"); err != nil {
+			t.Errorf("Failed to unset GROOVEKIT_TOKEN: %v", err)
+		}
+	}()
+	defer func() {
+		if err := os.Unsetenv("GROOVEKIT_API_URL"); err != nil {
+			t.Errorf("Failed to unset GROOVEKIT_API_URL: %v", err)
+		}
+	}()
 
 	cfg, err := Load()
 	if err != nil {
