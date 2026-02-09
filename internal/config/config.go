@@ -23,10 +23,15 @@ func Load() (*Config, error) {
 	data, err := os.ReadFile(configFile)
 	if err != nil {
 		if os.IsNotExist(err) {
-			// Config doesn't exist yet, return default
-			return &Config{
+			// Config doesn't exist yet, return default with env var support
+			cfg := &Config{
 				APIBaseURL: getAPIBaseURL(),
-			}, nil
+			}
+			// Check for CI/CD token even if config file doesn't exist
+			if envToken := os.Getenv("GROOVEKIT_TOKEN"); envToken != "" {
+				cfg.AccessToken = envToken
+			}
+			return cfg, nil
 		}
 		return nil, err
 	}
@@ -36,12 +41,17 @@ func Load() (*Config, error) {
 		return nil, err
 	}
 
-	// Environment variable takes precedence
+	// Environment variables take precedence
 	if envURL := os.Getenv("GROOVEKIT_API_URL"); envURL != "" {
 		cfg.APIBaseURL = envURL
 	} else if cfg.APIBaseURL == "" {
 		// Set default API URL if not present
 		cfg.APIBaseURL = getAPIBaseURL()
+	}
+
+	// Check for CI/CD token environment variable
+	if envToken := os.Getenv("GROOVEKIT_TOKEN"); envToken != "" {
+		cfg.AccessToken = envToken
 	}
 
 	return &cfg, nil

@@ -1,0 +1,113 @@
+name: Example - GrooveKit CI/CD Integration
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # Example 1: Check monitor health before deployment
+  pre-deploy-health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build GrooveKit CLI
+        run: go build -o groovekit
+
+      - name: Check Monitor Health
+        env:
+          GROOVEKIT_TOKEN: ${{ secrets.GROOVEKIT_TOKEN }}
+        run: |
+          # Fail deployment if any monitors are down
+          if ./groovekit monitors list --json | jq -e '.api_monitors[] | select(.down == true)' > /dev/null; then
+            echo "⚠️  Critical monitors are down! Blocking deployment."
+            ./groovekit monitors list
+            exit 1
+          else
+            echo "✅ All monitors healthy - safe to deploy"
+          fi
+
+  # Example 2: Create/update monitors for deployed services
+  setup-monitoring:
+    runs-on: ubuntu-latest
+    # Only run on main branch (production deployments)
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build GrooveKit CLI
+        run: go build -o groovekit
+
+      - name: Setup Production Monitors
+        env:
+          GROOVEKIT_TOKEN: ${{ secrets.GROOVEKIT_TOKEN }}
+          GROOVEKIT_API_URL: ${{ secrets.GROOVEKIT_API_URL }} # Optional: for custom API endpoints
+        run: |
+          # Create or update monitors for production services
+          ./groovekit monitors create \
+            --name "Production API - Health" \
+            --url https://api.example.com/health \
+            --method GET \
+            --interval 5 \
+            --expected-status-codes 200 || echo "Monitor may already exist"
+
+          ./groovekit monitors create \
+            --name "Production API - GraphQL" \
+            --url https://api.example.com/graphql \
+            --method POST \
+            --interval 5 || echo "Monitor may already exist"
+
+  # Example 3: Report recent incidents in PR comments
+  incident-report:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build GrooveKit CLI
+        run: go build -o groovekit
+
+      - name: Generate Incident Report
+        env:
+          GROOVEKIT_TOKEN: ${{ secrets.GROOVEKIT_TOKEN }}
+        run: |
+          # Get all monitors and check for recent incidents
+          echo "## 📊 GrooveKit Monitor Status" > incident-report.md
+          echo "" >> incident-report.md
+
+          # List all monitors with their status
+          ./groovekit monitors list >> incident-report.md || echo "Unable to fetch monitors"
+
+      - name: Comment on PR
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('incident-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
