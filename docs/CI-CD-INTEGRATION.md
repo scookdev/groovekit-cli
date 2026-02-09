@@ -4,7 +4,20 @@ GrooveKit CLI supports headless authentication via environment variables, making
 
 ## Quick Start
 
-### 1. Get Your Access Token
+### 1. Generate an API Key
+
+**Recommended for CI/CD:** Use long-lived API keys instead of JWT tokens (which expire after 24 hours).
+
+1. Log in to [GrooveKit Dashboard](https://groovekit.io)
+2. Go to **Settings** → **API Keys**
+3. Click **Create New API Key**
+4. Give it a descriptive name (e.g., "GitHub Actions - Production")
+5. Copy the token (starts with `gk_`) - **you'll only see this once!**
+
+> **Note:** API keys never expire until you revoke them, making them perfect for CI/CD pipelines.
+
+<details>
+<summary>Alternative: Using JWT Token (Not Recommended for CI/CD)</summary>
 
 After logging in locally with `groovekit login`, find your token in the config file:
 
@@ -13,6 +26,9 @@ cat ~/.groovekit/config.json
 ```
 
 Look for the `access_token` field. Copy this value.
+
+⚠️ **Warning:** JWT tokens expire after 24 hours and are intended for interactive CLI use, not CI/CD. Use API keys instead.
+</details>
 
 ### 2. Add Token to CI/CD Secrets
 
@@ -143,16 +159,20 @@ See [example-ci-monitoring.yml](../.github/workflows/example-ci-monitoring.yml) 
 ## Security Best Practices
 
 ### ✅ DO:
+- **Use API keys** (not JWT tokens) for CI/CD pipelines
 - Store tokens in CI/CD secrets (never commit to repo)
 - Use masked/protected secrets in GitLab
-- Rotate tokens periodically
-- Use different tokens for different environments (if managing multiple accounts)
-- Limit token access with read-only permissions when possible (future feature)
+- Give API keys descriptive names to track their usage
+- Create separate API keys for each pipeline/environment
+- Rotate API keys periodically (revoke old, create new)
+- Monitor "Last Used" timestamps in the dashboard
+- Revoke API keys immediately if compromised
 
 ### ❌ DON'T:
 - Commit tokens to version control
 - Share tokens in plain text
-- Use the same token across different organizations
+- Use the same API key across different projects
+- Use JWT tokens for long-running automation (they expire in 24 hours)
 - Log tokens in CI output (they should be automatically masked)
 
 ## Troubleshooting
@@ -163,12 +183,25 @@ See [example-ci-monitoring.yml](../.github/workflows/example-ci-monitoring.yml) 
 Error: not authenticated. Please run 'groovekit login' first
 ```
 
-**Solution:** Ensure `GROOVEKIT_TOKEN` is set and contains a valid token.
+**Solution:** Ensure `GROOVEKIT_TOKEN` is set and contains a valid API key (starts with `gk_`).
 
 ```yaml
 env:
   GROOVEKIT_TOKEN: ${{ secrets.GROOVEKIT_TOKEN }}
 ```
+
+### Token Expired (JWT)
+
+If you're using a JWT token from `~/.groovekit/config.json`:
+
+```
+Error: token expired
+```
+
+**Solution:** JWT tokens expire after 24 hours. For CI/CD, use long-lived API keys instead:
+1. Go to Settings → API Keys in the dashboard
+2. Create a new API key
+3. Update your `GROOVEKIT_TOKEN` secret with the new key
 
 ### Token Not Found in Secrets
 
