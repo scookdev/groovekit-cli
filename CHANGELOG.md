@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-09
+
+### Added
+- **CI/CD Integration Support**: Headless authentication via `GROOVEKIT_TOKEN` environment variable
+- API key authentication support for long-lived tokens in automated workflows
+- Compatible with GitHub Actions, GitLab CI, CircleCI, and all major CI/CD platforms
+- Automatic fallback from JWT to API key authentication
+
+### Use Cases
+- Block deployments when monitors are down
+- Automate monitor creation for new services
+- Check monitor status as part of health checks
+- View incidents and check history in CI pipelines
+
+### Example
+```bash
+# Set environment variable (e.g., in GitHub Actions secrets)
+export GROOVEKIT_TOKEN="gk_..."
+
+# Use CLI without interactive login
+groovekit monitors list
+groovekit monitors incidents <id>
+groovekit account show
+```
+
+See the [CI/CD Integration Guide](https://groovekit.io/dashboard/docs#ci-cd-integration) for detailed setup instructions.
+
 ## [1.0.0] - 2026-02-06
 
 ### Added
