@@ -118,7 +118,6 @@ type UpdateMonitorRequest struct {
 }
 
 // Check represents an API health check result
-// Check represents an API health check result
 type Check struct {
 	ID              string  `json:"id"`
 	APIMonitorID    string  `json:"api_monitor_id"`
@@ -172,44 +171,34 @@ type AccountSubscription struct {
 	MinCheckInterval int     `json:"min_check_interval"`
 }
 
-// AccountSubscription represents subscription details
+// SslMonitor types
+
+// SslMonitor represents ssl monitor details
 type SslMonitor struct {
-"id",
- "user_id",
- "name",
- "domain",
- "port",
- "status",
- "check_interval",
- "grace_period",
- "warning_threshold",
- "urgent_threshold",
- "critical_threshold",
- "certificate_expires_at",
- "certificate_issuer",
- "certificate_subject",
- "days_until_expiration",
- "last_check_at",
- "last_successful_check_at",
- "consecutive_failures",
- "last_alerted_at",
- "last_alert_level",
- "created_at",
- "updated_at"
-
-
-	Name         		 string  		 `json:"plan_name"`
-	Status           string  `json:"status"`
-	CurrentPeriodEnd *string `json:"current_period_end"`
-	MaxJobs          int     `json:"max_jobs"`
-	MaxMonitors      int     `json:"max_monitors"`
-	SMSLimit         int     `json:"sms_limit"`
-	MinCheckInterval int     `json:"min_check_interval"`
+	ID                    string `json:"id"`
+	Name                  string `json:"name"`
+	Domain                string `json:"domain"`,
+	Port                  string `json:"port"`,
+	Status                string `json:"status"`,
+	Interval              int    `json:"check_interval"`
+	GracePeriod           int    `json:"grace_period"`
+	WarningThreshod       int    `json:"warning_threshold"`
+	UrgentThreshold       int    `json:"urgent_threshold"`
+	CriticalThreshold     int    `json:"critical_threshold"`
+	CertificateExpiresAt  string `json:"certificate_expires_at"`
+	CertificateIssuer     string `json:"certificate_issuer"`
+	CertificateSubject    string `json:"certificate_subject"`
+	DaysUntilExpiration   int    `json:"days_until_expiration"`
+	LastCheckAt           string `json:"last_check_at"`
+	LastSuccessfulCheckAt string `json:"last_successful_check_at"`
+	ConsecutiveFailures   int    `json:"consecutive_failures"`
+	CreatedAt             string `json:"created_at"`
+	UpdatedAt             string `json:"updated_at"`
 }
 
 type SslCheck struct {
-"id",
- "ssl_monitor_id",
+	ID                    string `json:"id"`
+	SslMonitorID          string `json:"id"`
  "success",
  "error_message",
  "expires_at",
