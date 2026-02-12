@@ -12,15 +12,15 @@ import (
 
 var certsCmd = &cobra.Command{
 	Use:   "certs",
-	Short: "Manage SSL certificate monitors",
-	Long:  "List, create, show, and delete SSL certificate monitors",
+	Short: "Manage SSL certificate certs",
+	Long:  "List, create, show, and delete SSL certificate certs",
 }
 
-// monitors list
-var monitorsListCmd = &cobra.Command{
+// certs list
+var certsListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all monitors",
-	Long:  "List all API endpoint monitors for your account",
+	Short: "List all certs",
+	Long:  "List all API endpoint certs for your account",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
@@ -36,23 +36,23 @@ var monitorsListCmd = &cobra.Command{
 			s.Start()
 		}
 
-		result, err := client.ListMonitors()
+		result, err := client.ListCerts()
 
 		if s != nil {
 			s.Stop()
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed to list monitors: %w", err)
+			return fmt.Errorf("failed to list certs: %w", err)
 		}
 		if jsonOutput {
 			return outputJSON(result)
 		}
 
-		if len(result.APIMonitors) == 0 {
-			output.InfoMessage("No monitors found")
-			fmt.Println("\nCreate your first monitor:")
-			fmt.Println("  groovekit monitors create --name 'Production API' --url https://api.example.com/health --interval 60")
+		if len(result.APICerts) == 0 {
+			output.InfoMessage("No certs found")
+			fmt.Println("\nCreate your first cert:")
+			fmt.Println("  groovekit certs create --name 'Production API' --url https://api.example.com/health --interval 60")
 			return nil
 		}
 
@@ -61,44 +61,44 @@ var monitorsListCmd = &cobra.Command{
 		table.Render()
 
 		// Add rows
-		for _, monitor := range result.APIMonitors {
-			status := monitor.Status
-			if monitor.Status == "active" {
+		for _, cert := range result.APICerts {
+			status := cert.Status
+			if cert.Status == "active" {
 				status = output.Green(status)
 			}
 
 			health := output.Green("✓ Up")
-			if monitor.Down {
+			if cert.Down {
 				health = output.Red("✗ Down")
 			}
 
 			// Truncate ID to first 8 chars (like Docker)
-			shortID := monitor.ID
+			shortID := cert.ID
 			if len(shortID) > 8 {
 				shortID = shortID[:8]
 			}
 
 			table.Append([]string{
 				output.Cyan(shortID),
-				monitor.Name,
-				truncate(monitor.URL, 40),
-				output.FormatDuration(monitor.Interval),
+				cert.Name,
+				truncate(cert.URL, 40),
+				output.FormatDuration(cert.Interval),
 				status,
 				health,
 			})
 		}
 
 		table.Flush()
-		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d monitor(s)", len(result.APIMonitors))))
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d cert(s)", len(result.APICerts))))
 		return nil
 	},
 }
 
-// monitors show <id>
-var monitorsShowCmd = &cobra.Command{
+// certs show <id>
+var certsShowCmd = &cobra.Command{
 	Use:   "show <id>",
-	Short: "Show monitor details",
-	Long:  "Display detailed information about a specific monitor",
+	Short: "Show cert details",
+	Long:  "Display detailed information about a specific cert",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -107,7 +107,7 @@ var monitorsShowCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
@@ -121,51 +121,51 @@ var monitorsShowCmd = &cobra.Command{
 			s.Start()
 		}
 
-		monitor, err := client.GetMonitor(fullID)
+		cert, err := client.GetCert(fullID)
 
 		if s != nil {
 			s.Stop()
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed to get monitor: %w", err)
+			return fmt.Errorf("failed to get cert: %w", err)
 		}
 		if jsonOutput {
-			return outputJSON(monitor)
+			return outputJSON(cert)
 		}
 
-		// Print monitor details
-		fmt.Printf("ID:               %s\n", output.Cyan(monitor.ID))
-		fmt.Printf("Name:             %s\n", output.Bold(monitor.Name))
-		fmt.Printf("URL:              %s\n", monitor.URL)
-		fmt.Printf("HTTP Method:      %s\n", monitor.HTTPMethod)
-		fmt.Printf("Status:           %s\n", monitor.Status)
-		fmt.Printf("Interval:         %s\n", output.FormatDuration(monitor.Interval))
-		fmt.Printf("Timeout:          %d seconds\n", monitor.Timeout)
-		fmt.Printf("Grace Period:     %s\n", output.FormatDuration(monitor.GracePeriod))
-		fmt.Printf("Down:             %t\n", monitor.Down)
+		// Print cert details
+		fmt.Printf("ID:               %s\n", output.Cyan(cert.ID))
+		fmt.Printf("Name:             %s\n", output.Bold(cert.Name))
+		fmt.Printf("URL:              %s\n", cert.URL)
+		fmt.Printf("HTTP Method:      %s\n", cert.HTTPMethod)
+		fmt.Printf("Status:           %s\n", cert.Status)
+		fmt.Printf("Interval:         %s\n", output.FormatDuration(cert.Interval))
+		fmt.Printf("Timeout:          %d seconds\n", cert.Timeout)
+		fmt.Printf("Grace Period:     %s\n", output.FormatDuration(cert.GracePeriod))
+		fmt.Printf("Down:             %t\n", cert.Down)
 
-		if len(monitor.ExpectedStatusCodes) > 0 {
-			fmt.Printf("Expected Status:  %v\n", monitor.ExpectedStatusCodes)
+		if len(cert.ExpectedStatusCodes) > 0 {
+			fmt.Printf("Expected Status:  %v\n", cert.ExpectedStatusCodes)
 		}
 
-		if monitor.LastCheckAt != nil {
-			fmt.Printf("Last Check:       %s\n", *monitor.LastCheckAt)
+		if cert.LastCheckAt != nil {
+			fmt.Printf("Last Check:       %s\n", *cert.LastCheckAt)
 		} else {
 			fmt.Printf("Last Check:       Never\n")
 		}
 
-		if monitor.UptimePercentage != nil {
-			fmt.Printf("Uptime (30d):     %.2f%%\n", *monitor.UptimePercentage)
+		if cert.UptimePercentage != nil {
+			fmt.Printf("Uptime (30d):     %.2f%%\n", *cert.UptimePercentage)
 		}
 
-		if monitor.AverageResponseTime != nil {
-			fmt.Printf("Avg Response:     %.0fms\n", *monitor.AverageResponseTime)
+		if cert.AverageResponseTime != nil {
+			fmt.Printf("Avg Response:     %.0fms\n", *cert.AverageResponseTime)
 		}
 
-		if len(monitor.ValidateResponsePaths) > 0 {
+		if len(cert.ValidateResponsePaths) > 0 {
 			fmt.Printf("\nJSON Path Validation:\n")
-			for _, path := range monitor.ValidateResponsePaths {
+			for _, path := range cert.ValidateResponsePaths {
 				fmt.Printf("  - %s\n", path)
 			}
 		}
@@ -174,11 +174,11 @@ var monitorsShowCmd = &cobra.Command{
 	},
 }
 
-// monitors create
-var monitorsCreateCmd = &cobra.Command{
+// certs create
+var certsCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a new monitor",
-	Long:  "Create a new API endpoint monitor",
+	Short: "Create a new cert",
+	Long:  "Create a new API endpoint cert",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
 		if err != nil {
@@ -201,7 +201,7 @@ var monitorsCreateCmd = &cobra.Command{
 			return fmt.Errorf("--interval must be greater than 0")
 		}
 
-		req := &api.CreateMonitorRequest{
+		req := &api.CreateCertRequest{
 			Name:       name,
 			URL:        url,
 			Interval:   interval,
@@ -210,28 +210,28 @@ var monitorsCreateCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		monitor, err := client.CreateMonitor(req)
+		cert, err := client.CreateCert(req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to create monitor: %w", err)
+			return fmt.Errorf("failed to create cert: %w", err)
 		}
 
-		output.SuccessMessage("Monitor created successfully\n")
-		fmt.Printf("ID:          %s\n", output.Cyan(monitor.ID))
-		fmt.Printf("Name:        %s\n", output.Bold(monitor.Name))
-		fmt.Printf("URL:         %s\n", monitor.URL)
-		fmt.Printf("Interval:    %s\n", fmt.Sprintf("%d minutes", monitor.Interval))
+		output.SuccessMessage("Cert created successfully\n")
+		fmt.Printf("ID:          %s\n", output.Cyan(cert.ID))
+		fmt.Printf("Name:        %s\n", output.Bold(cert.Name))
+		fmt.Printf("URL:         %s\n", cert.URL)
+		fmt.Printf("Interval:    %s\n", fmt.Sprintf("%d minutes", cert.Interval))
 
 		return nil
 	},
 }
 
-// monitors update <id>
-var monitorsUpdateCmd = &cobra.Command{
+// certs update <id>
+var certsUpdateCmd = &cobra.Command{
 	Use:   "update <id>",
-	Short: "Update a monitor",
-	Long:  "Update an existing API endpoint monitor",
+	Short: "Update a cert",
+	Long:  "Update an existing API endpoint cert",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -240,13 +240,13 @@ var monitorsUpdateCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
 
 		// Build update request with only provided flags
-		req := &api.UpdateMonitorRequest{}
+		req := &api.UpdateCertRequest{}
 		hasUpdates := false
 
 		if cmd.Flags().Changed("name") {
@@ -303,30 +303,30 @@ var monitorsUpdateCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		monitor, err := client.UpdateMonitor(fullID, req)
+		cert, err := client.UpdateCert(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to update monitor: %w", err)
+			return fmt.Errorf("failed to update cert: %w", err)
 		}
 
-		output.SuccessMessage("Monitor updated successfully\n")
-		fmt.Printf("ID:       %s\n", output.Cyan(monitor.ID))
-		fmt.Printf("Name:     %s\n", output.Bold(monitor.Name))
-		fmt.Printf("URL:      %s\n", monitor.URL)
-		fmt.Printf("Method:   %s\n", monitor.HTTPMethod)
-		fmt.Printf("Interval: %s\n", output.FormatDuration(monitor.Interval))
-		fmt.Printf("Status:   %s\n", monitor.Status)
+		output.SuccessMessage("Cert updated successfully\n")
+		fmt.Printf("ID:       %s\n", output.Cyan(cert.ID))
+		fmt.Printf("Name:     %s\n", output.Bold(cert.Name))
+		fmt.Printf("URL:      %s\n", cert.URL)
+		fmt.Printf("Method:   %s\n", cert.HTTPMethod)
+		fmt.Printf("Interval: %s\n", output.FormatDuration(cert.Interval))
+		fmt.Printf("Status:   %s\n", cert.Status)
 
 		return nil
 	},
 }
 
-// monitors pause <id>
-var monitorsPauseCmd = &cobra.Command{
+// certs pause <id>
+var certsPauseCmd = &cobra.Command{
 	Use:   "pause <id>",
-	Short: "Pause a monitor",
-	Long:  "Pause an API endpoint monitor (sets status to paused)",
+	Short: "Pause a cert",
+	Long:  "Pause an API endpoint cert (sets status to paused)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -335,34 +335,34 @@ var monitorsPauseCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
 
 		// Update status to paused
 		status := "paused"
-		req := &api.UpdateMonitorRequest{Status: &status}
+		req := &api.UpdateCertRequest{Status: &status}
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		_, err = client.UpdateMonitor(fullID, req)
+		_, err = client.UpdateCert(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to pause monitor: %w", err)
+			return fmt.Errorf("failed to pause cert: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s paused successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("Cert %s paused successfully", args[0]))
 		return nil
 	},
 }
 
-// monitors resume <id>
-var monitorsResumeCmd = &cobra.Command{
+// certs resume <id>
+var certsResumeCmd = &cobra.Command{
 	Use:   "resume <id>",
-	Short: "Resume a monitor",
-	Long:  "Resume a paused API endpoint monitor (sets status to active)",
+	Short: "Resume a cert",
+	Long:  "Resume a paused API endpoint cert (sets status to active)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -371,34 +371,34 @@ var monitorsResumeCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
 
 		// Update status to active
 		status := "active"
-		req := &api.UpdateMonitorRequest{Status: &status}
+		req := &api.UpdateCertRequest{Status: &status}
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		_, err = client.UpdateMonitor(fullID, req)
+		_, err = client.UpdateCert(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to resume monitor: %w", err)
+			return fmt.Errorf("failed to resume cert: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s resumed successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("Cert %s resumed successfully", args[0]))
 		return nil
 	},
 }
 
-// monitors incidents <id>
-var monitorsIncidentsCmd = &cobra.Command{
+// certs incidents <id>
+var certsIncidentsCmd = &cobra.Command{
 	Use:   "incidents <id>",
 	Short: "Show incident history",
-	Long:  "Display incident history (downtime periods) for a monitor",
+	Long:  "Display incident history (downtime periods) for a cert",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -407,7 +407,7 @@ var monitorsIncidentsCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
@@ -421,7 +421,7 @@ var monitorsIncidentsCmd = &cobra.Command{
 			s.Start()
 		}
 
-		incidents, err := client.ListMonitorIncidents(fullID)
+		incidents, err := client.ListCertIncidents(fullID)
 
 		if s != nil {
 			s.Stop()
@@ -436,7 +436,7 @@ var monitorsIncidentsCmd = &cobra.Command{
 		}
 
 		if len(incidents) == 0 {
-			output.InfoMessage("No incidents found - this monitor has been running smoothly!")
+			output.InfoMessage("No incidents found - this cert has been running smoothly!")
 			return nil
 		}
 
@@ -478,11 +478,11 @@ var monitorsIncidentsCmd = &cobra.Command{
 	},
 }
 
-// monitors delete <id>
-var monitorsDeleteCmd = &cobra.Command{
+// certs delete <id>
+var certsDeleteCmd = &cobra.Command{
 	Use:   "delete <id>",
-	Short: "Delete a monitor",
-	Long:  "Delete an API endpoint monitor",
+	Short: "Delete a cert",
+	Long:  "Delete an API endpoint cert",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -491,7 +491,7 @@ var monitorsDeleteCmd = &cobra.Command{
 		}
 
 		// Resolve short ID to full ID
-		fullID, err := resolveMonitorID(client, args[0])
+		fullID, err := resolveCertID(client, args[0])
 		if err != nil {
 			return err
 		}
@@ -499,7 +499,7 @@ var monitorsDeleteCmd = &cobra.Command{
 		// Confirm deletion
 		confirm, _ := cmd.Flags().GetBool("force")
 		if !confirm {
-			fmt.Printf("Are you sure you want to delete monitor %s? (y/N): ", args[0])
+			fmt.Printf("Are you sure you want to delete cert %s? (y/N): ", args[0])
 			var response string
 			_, _ = fmt.Scanln(&response)
 			if response != "y" && response != "Y" {
@@ -510,44 +510,44 @@ var monitorsDeleteCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		err = client.DeleteMonitor(fullID)
+		err = client.DeleteCert(fullID)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to delete monitor: %w", err)
+			return fmt.Errorf("failed to delete cert: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s deleted successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("Cert %s deleted successfully", args[0]))
 		return nil
 	},
 }
 
-// Helper function to resolve a short monitor ID to a full ID
-func resolveMonitorID(client *api.Client, shortID string) (string, error) {
+// Helper function to resolve a short cert ID to a full ID
+func resolveCertID(client *api.Client, shortID string) (string, error) {
 	// If it looks like a full UUID, use it as-is
 	if len(shortID) >= 32 {
 		return shortID, nil
 	}
 
-	// Otherwise, fetch all monitors and match by prefix
-	result, err := client.ListMonitors()
+	// Otherwise, fetch all certs and match by prefix
+	result, err := client.ListCerts()
 	if err != nil {
-		return "", fmt.Errorf("failed to list monitors: %w", err)
+		return "", fmt.Errorf("failed to list certs: %w", err)
 	}
 
 	var matches []string
-	for _, monitor := range result.APIMonitors {
-		if len(monitor.ID) >= len(shortID) && monitor.ID[:len(shortID)] == shortID {
-			matches = append(matches, monitor.ID)
+	for _, cert := range result.APICerts {
+		if len(cert.ID) >= len(shortID) && cert.ID[:len(shortID)] == shortID {
+			matches = append(matches, cert.ID)
 		}
 	}
 
 	if len(matches) == 0 {
-		return "", fmt.Errorf("no monitor found with ID prefix '%s'", shortID)
+		return "", fmt.Errorf("no cert found with ID prefix '%s'", shortID)
 	}
 
 	if len(matches) > 1 {
-		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple monitors", shortID)
+		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple certs", shortID)
 	}
 
 	return matches[0], nil
@@ -555,45 +555,45 @@ func resolveMonitorID(client *api.Client, shortID string) (string, error) {
 
 func init() {
 	// Add flags to list command
-	monitorsListCmd.Flags().Bool("json", false, "Output as JSON")
+	certsListCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to show command
-	monitorsShowCmd.Flags().Bool("json", false, "Output as JSON")
+	certsShowCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to create command
-	monitorsCreateCmd.Flags().String("name", "", "Monitor name (required)")
-	monitorsCreateCmd.Flags().String("url", "", "URL to monitor (required)")
-	monitorsCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
-	monitorsCreateCmd.Flags().String("method", "GET", "HTTP method")
-	_ = monitorsCreateCmd.MarkFlagRequired("name")
-	_ = monitorsCreateCmd.MarkFlagRequired("url")
+	certsCreateCmd.Flags().String("name", "", "cert name (required)")
+	certsCreateCmd.Flags().String("url", "", "URL to cert (required)")
+	certsCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
+	certsCreateCmd.Flags().String("method", "GET", "HTTP method")
+	_ = certsCreateCmd.MarkFlagRequired("name")
+	_ = certsCreateCmd.MarkFlagRequired("url")
 
 	// Add flags to update command
-	monitorsUpdateCmd.Flags().String("name", "", "Monitor name")
-	monitorsUpdateCmd.Flags().String("url", "", "URL to monitor")
-	monitorsUpdateCmd.Flags().String("http-method", "", "HTTP method (GET, POST, etc)")
-	monitorsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
-	monitorsUpdateCmd.Flags().Int("timeout", 0, "Request timeout in seconds")
-	monitorsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
-	monitorsUpdateCmd.Flags().String("status", "", "Monitor status (active, inactive, paused)")
-	monitorsUpdateCmd.Flags().IntSlice("expected-status-codes", nil, "Expected HTTP status codes (comma-separated)")
+	certsUpdateCmd.Flags().String("name", "", "Cert name")
+	certsUpdateCmd.Flags().String("url", "", "URL to cert")
+	certsUpdateCmd.Flags().String("http-method", "", "HTTP method (GET, POST, etc)")
+	certsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
+	certsUpdateCmd.Flags().Int("timeout", 0, "Request timeout in seconds")
+	certsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
+	certsUpdateCmd.Flags().String("status", "", "Cert status (active, inactive, paused)")
+	certsUpdateCmd.Flags().IntSlice("expected-status-codes", nil, "Expected HTTP status codes (comma-separated)")
 
 	// Add flags to incidents command
-	monitorsIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
+	certsIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to delete command
-	monitorsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
+	certsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
 	// Add subcommands
-	monitorsCmd.AddCommand(monitorsListCmd)
-	monitorsCmd.AddCommand(monitorsShowCmd)
-	monitorsCmd.AddCommand(monitorsCreateCmd)
-	monitorsCmd.AddCommand(monitorsUpdateCmd)
-	monitorsCmd.AddCommand(monitorsPauseCmd)
-	monitorsCmd.AddCommand(monitorsResumeCmd)
-	monitorsCmd.AddCommand(monitorsIncidentsCmd)
-	monitorsCmd.AddCommand(monitorsDeleteCmd)
+	certsCmd.AddCommand(certsListCmd)
+	certsCmd.AddCommand(certsShowCmd)
+	certsCmd.AddCommand(certsCreateCmd)
+	certsCmd.AddCommand(certsUpdateCmd)
+	certsCmd.AddCommand(certsPauseCmd)
+	certsCmd.AddCommand(certsResumeCmd)
+	certsCmd.AddCommand(certsIncidentsCmd)
+	certsCmd.AddCommand(certsDeleteCmd)
 
-	// Add monitors command to root
-	rootCmd.AddCommand(monitorsCmd)
+	// Add certs command to root
+	rootCmd.AddCommand(certsCmd)
 }
