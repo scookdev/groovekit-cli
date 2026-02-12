@@ -171,3 +171,60 @@ type AccountSubscription struct {
 	SMSLimit         int     `json:"sms_limit"`
 	MinCheckInterval int     `json:"min_check_interval"`
 }
+
+// AccountSubscription represents subscription details
+type SslMonitor struct {
+"id",
+ "user_id",
+ "name",
+ "domain",
+ "port",
+ "status",
+ "check_interval",
+ "grace_period",
+ "warning_threshold",
+ "urgent_threshold",
+ "critical_threshold",
+ "certificate_expires_at",
+ "certificate_issuer",
+ "certificate_subject",
+ "days_until_expiration",
+ "last_check_at",
+ "last_successful_check_at",
+ "consecutive_failures",
+ "last_alerted_at",
+ "last_alert_level",
+ "created_at",
+ "updated_at"
+
+
+	Name         		 string  		 `json:"plan_name"`
+	Status           string  `json:"status"`
+	CurrentPeriodEnd *string `json:"current_period_end"`
+	MaxJobs          int     `json:"max_jobs"`
+	MaxMonitors      int     `json:"max_monitors"`
+	SMSLimit         int     `json:"sms_limit"`
+	MinCheckInterval int     `json:"min_check_interval"`
+}
+
+type SslCheck struct {
+"id",
+ "ssl_monitor_id",
+ "success",
+ "error_message",
+ "expires_at",
+ "issuer",
+ "subject",
+ "days_until_expiration",
+ "valid_days_remaining",
+ "fingerprint",
+ "serial_number",
+ "valid_from",
+ "valid_to",
+ "version",
+ "check_duration_ms",
+ "tls_version",
+ "cipher_suite",
+ "created_at",
+ "updated_at"]
+}
