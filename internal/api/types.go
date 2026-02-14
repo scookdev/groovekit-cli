@@ -178,7 +178,7 @@ type SslMonitor struct {
 	ID                    string `json:"id"`
 	Name                  string `json:"name"`
 	Domain                string `json:"domain"`
-	Port                  string `json:"port"`
+	Port                  int    `json:"port"`
 	Status                string `json:"status"`
 	Interval              int    `json:"check_interval"`
 	GracePeriod           int    `json:"grace_period"`
@@ -212,7 +212,7 @@ type SslMonitorResponse struct {
 type CreateSslMonitorRequest struct {
 	Name              string `json:"name"`
 	Domain            string `json:"domain"`
-	Port              string `json:"port,omitempty"`
+	Port              int    `json:"port,omitempty"`
 	Interval          int    `json:"check_interval,omitempty"`
 	GracePeriod       int    `json:"grace_period,omitempty"`
 	WarningThreshold  int    `json:"warning_threshold,omitempty"`
@@ -225,7 +225,7 @@ type CreateSslMonitorRequest struct {
 type UpdateSslMonitorRequest struct {
 	Name              *string `json:"name,omitempty"`
 	Domain            *string `json:"domain,omitempty"`
-	Port              *string `json:"port,omitempty"`
+	Port              *int    `json:"port,omitempty"`
 	Interval          *int    `json:"check_interval,omitempty"`
 	GracePeriod       *int    `json:"grace_period,omitempty"`
 	WarningThreshold  *int    `json:"warning_threshold,omitempty"`

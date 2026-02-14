@@ -89,7 +89,7 @@ var certsListCmd = &cobra.Command{
 				output.Cyan(shortID),
 				cert.Name,
 				cert.Domain,
-				cert.Port,
+				fmt.Sprintf("%d", cert.Port),
 				daysLeft,
 				status,
 			})
@@ -145,7 +145,7 @@ var certsShowCmd = &cobra.Command{
 		fmt.Printf("ID:                       %s\n", output.Cyan(cert.ID))
 		fmt.Printf("Name:                     %s\n", output.Bold(cert.Name))
 		fmt.Printf("Domain:                   %s\n", cert.Domain)
-		fmt.Printf("Port:                     %s\n", cert.Port)
+		fmt.Printf("Port:                     %d\n", cert.Port)
 		fmt.Printf("Status:                   %s\n", cert.Status)
 		fmt.Printf("Check Interval:           %s\n", output.FormatDuration(cert.Interval))
 		fmt.Printf("Grace Period:             %s\n", output.FormatDuration(cert.GracePeriod))
@@ -180,7 +180,7 @@ var certsCreateCmd = &cobra.Command{
 		// Get flag values
 		name, _ := cmd.Flags().GetString("name")
 		domain, _ := cmd.Flags().GetString("domain")
-		port, _ := cmd.Flags().GetString("port")
+		port, _ := cmd.Flags().GetInt("port")
 		interval, _ := cmd.Flags().GetInt("interval")
 
 		if name == "" {
@@ -210,7 +210,7 @@ var certsCreateCmd = &cobra.Command{
 		fmt.Printf("ID:       %s\n", output.Cyan(cert.ID))
 		fmt.Printf("Name:     %s\n", output.Bold(cert.Name))
 		fmt.Printf("Domain:   %s\n", cert.Domain)
-		fmt.Printf("Port:     %s\n", cert.Port)
+		fmt.Printf("Port:     %d\n", cert.Port)
 		fmt.Printf("Interval: %s\n", output.FormatDuration(cert.Interval))
 
 		return nil
@@ -252,7 +252,7 @@ var certsUpdateCmd = &cobra.Command{
 		}
 
 		if cmd.Flags().Changed("port") {
-			port, _ := cmd.Flags().GetString("port")
+			port, _ := cmd.Flags().GetInt("port")
 			req.Port = &port
 			hasUpdates = true
 		}
@@ -310,7 +310,7 @@ var certsUpdateCmd = &cobra.Command{
 		fmt.Printf("ID:       %s\n", output.Cyan(cert.ID))
 		fmt.Printf("Name:     %s\n", output.Bold(cert.Name))
 		fmt.Printf("Domain:   %s\n", cert.Domain)
-		fmt.Printf("Port:     %s\n", cert.Port)
+		fmt.Printf("Port:     %d\n", cert.Port)
 		fmt.Printf("Interval: %s\n", output.FormatDuration(cert.Interval))
 		fmt.Printf("Status:   %s\n", cert.Status)
 
@@ -559,7 +559,7 @@ func init() {
 	// Add flags to create command
 	certsCreateCmd.Flags().String("name", "", "SSL monitor name (required)")
 	certsCreateCmd.Flags().String("domain", "", "Domain to monitor (required)")
-	certsCreateCmd.Flags().String("port", "443", "Port number")
+	certsCreateCmd.Flags().Int("port", 443, "Port number")
 	certsCreateCmd.Flags().Int("interval", 1440, "Check interval in minutes (default: daily)")
 	_ = certsCreateCmd.MarkFlagRequired("name")
 	_ = certsCreateCmd.MarkFlagRequired("domain")
@@ -567,7 +567,7 @@ func init() {
 	// Add flags to update command
 	certsUpdateCmd.Flags().String("name", "", "SSL monitor name")
 	certsUpdateCmd.Flags().String("domain", "", "Domain to monitor")
-	certsUpdateCmd.Flags().String("port", "", "Port number")
+	certsUpdateCmd.Flags().Int("port", 0, "Port number")
 	certsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
 	certsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
 	certsUpdateCmd.Flags().Int("warning-threshold", 0, "Warning threshold in days")
