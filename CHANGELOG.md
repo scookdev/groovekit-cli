@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-12
+
+### Added
+- **SSL Certificate Monitoring**: Full CRUD operations for SSL certificate monitors
+- Track SSL certificate expiration dates with configurable warning thresholds
+- Color-coded certificate expiration display (green/yellow/red based on days remaining)
+- Multiple alert threshold levels (warning, urgent, critical)
+- Domain and port monitoring support
+- Incident history tracking for certificate issues
+- Certificate details including issuer, subject, and expiration information
+
+### Commands
+- `groovekit certs` - Manage SSL certificate monitors
+  - `list` - View all SSL certificate monitors with expiration status
+  - `show <id>` - Display detailed certificate information
+  - `create` - Add new SSL certificate monitor
+  - `update <id>` - Modify existing certificate monitor
+  - `delete <id>` - Remove SSL certificate monitor
+  - `pause <id>` - Temporarily pause certificate monitoring
+  - `resume <id>` - Resume paused certificate monitoring
+  - `incidents <id>` - View certificate incident history
+
+### Improved
+- Comprehensive test coverage for jobs, monitors, and certs commands
+- Added table-driven tests for helper functions
+- Flag validation tests for all commands
+- Subcommand registration verification tests
+
+### Technical
+- Added `SslMonitor` type with full certificate tracking fields
+- Implemented `CreateSslMonitorRequest` and `UpdateSslMonitorRequest` types
+- Added client methods: `CreateCert`, `UpdateCert`, `DeleteCert`, `ListCertIncidents`
+- Port field properly typed as integer for API compatibility
+
 ## [1.1.0] - 2026-02-09
 
 ### Added

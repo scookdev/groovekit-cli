@@ -118,7 +118,6 @@ type UpdateMonitorRequest struct {
 }
 
 // Check represents an API health check result
-// Check represents an API health check result
 type Check struct {
 	ID              string  `json:"id"`
 	APIMonitorID    string  `json:"api_monitor_id"`
@@ -171,3 +170,88 @@ type AccountSubscription struct {
 	SMSLimit         int     `json:"sms_limit"`
 	MinCheckInterval int     `json:"min_check_interval"`
 }
+
+// SslMonitor types
+
+// SslMonitor represents ssl monitor details
+type SslMonitor struct {
+	ID                    string `json:"id"`
+	Name                  string `json:"name"`
+	Domain                string `json:"domain"`
+	Port                  int    `json:"port"`
+	Status                string `json:"status"`
+	Interval              int    `json:"check_interval"`
+	GracePeriod           int    `json:"grace_period"`
+	WarningThreshold      int    `json:"warning_threshold"`
+	UrgentThreshold       int    `json:"urgent_threshold"`
+	CriticalThreshold     int    `json:"critical_threshold"`
+	CertificateExpiresAt  string `json:"certificate_expires_at"`
+	CertificateIssuer     string `json:"certificate_issuer"`
+	CertificateSubject    string `json:"certificate_subject"`
+	DaysUntilExpiration   int    `json:"days_until_expiration"`
+	LastCheckAt           string `json:"last_check_at"`
+	LastSuccessfulCheckAt string `json:"last_successful_check_at"`
+	ConsecutiveFailures   int    `json:"consecutive_failures"`
+	CreatedAt             string `json:"created_at"`
+	UpdatedAt             string `json:"updated_at"`
+}
+
+// SslMonitorsResponse represents the response from GET /ssl_monitors
+type SslMonitorsResponse struct {
+	SslMonitors []SslMonitor `json:"ssl_monitors"`
+	HasMore     bool         `json:"has_more"`
+	TotalCount  int          `json:"total_count"`
+}
+
+// SslMonitorResponse represents the response from POST/PUT /ssl_monitors
+type SslMonitorResponse struct {
+	SslMonitor SslMonitor `json:"ssl_monitor"`
+}
+
+// CreateSslMonitorRequest represents the request body for creating an SSL monitor
+type CreateSslMonitorRequest struct {
+	Name              string `json:"name"`
+	Domain            string `json:"domain"`
+	Port              int    `json:"port,omitempty"`
+	Interval          int    `json:"check_interval,omitempty"`
+	GracePeriod       int    `json:"grace_period,omitempty"`
+	WarningThreshold  int    `json:"warning_threshold,omitempty"`
+	UrgentThreshold   int    `json:"urgent_threshold,omitempty"`
+	CriticalThreshold int    `json:"critical_threshold,omitempty"`
+	Status            string `json:"status,omitempty"`
+}
+
+// UpdateSslMonitorRequest represents the request body for updating an SSL monitor
+type UpdateSslMonitorRequest struct {
+	Name              *string `json:"name,omitempty"`
+	Domain            *string `json:"domain,omitempty"`
+	Port              *int    `json:"port,omitempty"`
+	Interval          *int    `json:"check_interval,omitempty"`
+	GracePeriod       *int    `json:"grace_period,omitempty"`
+	WarningThreshold  *int    `json:"warning_threshold,omitempty"`
+	UrgentThreshold   *int    `json:"urgent_threshold,omitempty"`
+	CriticalThreshold *int    `json:"critical_threshold,omitempty"`
+	Status            *string `json:"status,omitempty"`
+}
+
+// type SslCheck struct {
+// 	ID                    string `json:"id"`
+// 	SslMonitorID          string `json:"id"`
+//  "success",
+//  "error_message",
+//  "expires_at",
+//  "issuer",
+//  "subject",
+//  "days_until_expiration",
+//  "valid_days_remaining",
+//  "fingerprint",
+//  "serial_number",
+//  "valid_from",
+//  "valid_to",
+//  "version",
+//  "check_duration_ms",
+//  "tls_version",
+//  "cipher_suite",
+//  "created_at",
+//  "updated_at"]
+// }
