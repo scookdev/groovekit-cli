@@ -369,4 +369,3 @@ func (c *Client) ListCertIncidents(id string) ([]Incident, error) {
 	}
 	return result.Incidents, nil
 }
-
