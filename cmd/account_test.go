@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// TestAuthCommand tests the basic structure of the account command
+// TestAccountCommand tests the basic structure of the account command
 func TestAccountCommand(t *testing.T) {
 	assert.Equal(t, "account", accountCmd.Use)
 	assert.Equal(t, "View account information", accountCmd.Short)
