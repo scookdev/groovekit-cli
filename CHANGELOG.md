@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-18
+
+### Added
+- **DNS Record Monitoring**: Full CRUD operations for DNS record monitors
+- Monitor DNS records for unexpected changes across A, AAAA, MX, CNAME, TXT, and NS record types
+- Mismatch detection with color-coded status (green = values match, red = values don't match)
+- Expected vs current value comparison in `dns show`
+- Incident history tracking for DNS change events
+- **Domain Expiration Monitoring**: Full CRUD operations for domain expiration monitors
+- Track domain registration expiry with configurable alert thresholds
+- Color-coded days-until-expiration display (green/yellow/red based on proximity to expiry)
+- Three-tier alerting with warning, urgent, and critical thresholds (defaults: 30/14/7 days)
+- Registrar and registrar URL display in domain details
+- Incident history tracking for domain expiration events
+
+### Commands
+- `groovekit dns` - Manage DNS record monitors
+  - `list` - View all DNS monitors with mismatch status
+  - `show <id>` - Display monitor details including expected and current values
+  - `create` - Add new DNS monitor (`--name`, `--domain`, `--type`, `--expected`)
+  - `update <id>` - Modify existing DNS monitor
+  - `delete <id>` - Remove DNS monitor (with `--force` to skip confirmation)
+  - `pause <id>` - Temporarily pause DNS monitoring
+  - `resume <id>` - Resume paused DNS monitoring
+  - `incidents <id>` - View DNS monitor incident history
+- `groovekit domains` - Manage domain expiration monitors
+  - `list` - View all domain monitors with days until expiration
+  - `show <id>` - Display domain details including registrar and thresholds
+  - `create` - Add new domain monitor (`--name`, `--domain`, threshold flags)
+  - `update <id>` - Modify existing domain monitor
+  - `delete <id>` - Remove domain monitor (with `--force` to skip confirmation)
+  - `pause <id>` - Temporarily pause domain monitoring
+  - `resume <id>` - Resume paused domain monitoring
+  - `incidents <id>` - View domain monitor incident history
+
+### Technical
+- Added `DnsMonitor`, `CreateDnsMonitorRequest`, and `UpdateDnsMonitorRequest` types
+- Added `DomainMonitor`, `CreateDomainMonitorRequest`, and `UpdateDomainMonitorRequest` types
+- Added client methods for DNS and domain CRUD, incidents, pause, and resume
+- Short ID prefix matching (Docker-style) for both DNS and domain monitors
+
 ## [1.2.0] - 2026-02-12
 
 ### Added

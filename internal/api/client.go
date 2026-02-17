@@ -190,7 +190,7 @@ func (c *Client) GetJob(id string) (*Job, error) {
 
 // CreateJob creates a new job
 func (c *Client) CreateJob(req *CreateJobRequest) (*Job, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"job": req,
 	}
 	var result JobResponse
@@ -202,7 +202,7 @@ func (c *Client) CreateJob(req *CreateJobRequest) (*Job, error) {
 
 // UpdateJob updates an existing job
 func (c *Client) UpdateJob(id string, req *UpdateJobRequest) (*Job, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"job": req,
 	}
 	var result JobResponse
@@ -365,6 +365,126 @@ func (c *Client) ListCertIncidents(id string) ([]Incident, error) {
 		Incidents []Incident `json:"incidents"`
 	}
 	if err := c.Get("/ssl_monitors/"+id+"/incidents", &result); err != nil {
+		return nil, err
+	}
+	return result.Incidents, nil
+}
+
+// Domain Monitor API methods
+
+// ListDomains returns all domain monitors for the authenticated user
+func (c *Client) ListDomains() (*DomainMonitorsResponse, error) {
+	var result DomainMonitorsResponse
+	if err := c.Get("/domain_monitors", &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// GetDomain returns a single domain monitor by ID
+func (c *Client) GetDomain(id string) (*DomainMonitor, error) {
+	var result DomainMonitorResponse
+	if err := c.Get("/domain_monitors/"+id, &result); err != nil {
+		return nil, err
+	}
+	return &result.DomainMonitor, nil
+}
+
+// CreateDomain creates a new domain monitor
+func (c *Client) CreateDomain(req *CreateDomainMonitorRequest) (*DomainMonitor, error) {
+	payload := map[string]interface{}{
+		"domain_monitor": req,
+	}
+	var result DomainMonitorResponse
+	if err := c.Post("/domain_monitors", payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.DomainMonitor, nil
+}
+
+// UpdateDomain updates an existing domain monitor
+func (c *Client) UpdateDomain(id string, req *UpdateDomainMonitorRequest) (*DomainMonitor, error) {
+	payload := map[string]interface{}{
+		"domain_monitor": req,
+	}
+	var result DomainMonitorResponse
+	if err := c.Put("/domain_monitors/"+id, payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.DomainMonitor, nil
+}
+
+// DeleteDomain deletes a domain monitor by ID
+func (c *Client) DeleteDomain(id string) error {
+	return c.Delete("/domain_monitors/" + id)
+}
+
+// ListDomainIncidents returns incident history for a domain monitor
+func (c *Client) ListDomainIncidents(id string) ([]Incident, error) {
+	var result struct {
+		Incidents []Incident `json:"incidents"`
+	}
+	if err := c.Get("/domain_monitors/"+id+"/incidents", &result); err != nil {
+		return nil, err
+	}
+	return result.Incidents, nil
+}
+
+// DNS Monitor API methods
+
+// ListDnsMonitors returns all DNS monitors for the authenticated user
+func (c *Client) ListDnsMonitors() (*DnsMonitorsResponse, error) {
+	var result DnsMonitorsResponse
+	if err := c.Get("/dns_monitors", &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// GetDnsMonitor returns a single DNS monitor by ID
+func (c *Client) GetDnsMonitor(id string) (*DnsMonitor, error) {
+	var result DnsMonitorResponse
+	if err := c.Get("/dns_monitors/"+id, &result); err != nil {
+		return nil, err
+	}
+	return &result.DnsMonitor, nil
+}
+
+// CreateDnsMonitor creates a new DNS monitor
+func (c *Client) CreateDnsMonitor(req *CreateDnsMonitorRequest) (*DnsMonitor, error) {
+	payload := map[string]interface{}{
+		"dns_monitor": req,
+	}
+	var result DnsMonitorResponse
+	if err := c.Post("/dns_monitors", payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.DnsMonitor, nil
+}
+
+// UpdateDnsMonitor updates an existing DNS monitor
+func (c *Client) UpdateDnsMonitor(id string, req *UpdateDnsMonitorRequest) (*DnsMonitor, error) {
+	payload := map[string]interface{}{
+		"dns_monitor": req,
+	}
+	var result DnsMonitorResponse
+	if err := c.Put("/dns_monitors/"+id, payload, &result); err != nil {
+		return nil, err
+	}
+	return &result.DnsMonitor, nil
+}
+
+// DeleteDnsMonitor deletes a DNS monitor by ID
+func (c *Client) DeleteDnsMonitor(id string) error {
+	return c.Delete("/dns_monitors/" + id)
+}
+
+// ListDnsMonitorIncidents returns incident history for a DNS monitor
+func (c *Client) ListDnsMonitorIncidents(id string) ([]Incident, error) {
+	var result struct {
+		Incidents []Incident `json:"incidents"`
+	}
+	if err := c.Get("/dns_monitors/"+id+"/incidents", &result); err != nil {
 		return nil, err
 	}
 	return result.Incidents, nil
