@@ -255,3 +255,119 @@ type UpdateSslMonitorRequest struct {
 //  "created_at",
 //  "updated_at"]
 // }
+
+// Domain Monitor types
+
+// DomainMonitor represents a domain expiration monitor
+type DomainMonitor struct {
+	ID                    string  `json:"id"`
+	Name                  string  `json:"name"`
+	Domain                string  `json:"domain"`
+	Status                string  `json:"status"`
+	Interval              int     `json:"check_interval"`
+	GracePeriod           int     `json:"grace_period"`
+	WarningThreshold      int     `json:"warning_threshold"`
+	UrgentThreshold       int     `json:"urgent_threshold"`
+	CriticalThreshold     int     `json:"critical_threshold"`
+	Registrar             string  `json:"registrar"`
+	RegistrarURL          *string `json:"registrar_url"`
+	ExpiresAt             string  `json:"expires_at"`
+	DaysUntilExpiration   int     `json:"days_until_expiration"`
+	LastCheckAt           string  `json:"last_check_at"`
+	LastSuccessfulCheckAt string  `json:"last_successful_check_at"`
+	ConsecutiveFailures   int     `json:"consecutive_failures"`
+	CreatedAt             string  `json:"created_at"`
+	UpdatedAt             string  `json:"updated_at"`
+}
+
+// DomainMonitorsResponse represents the response from GET /domain_monitors
+type DomainMonitorsResponse struct {
+	DomainMonitors []DomainMonitor `json:"domain_monitors"`
+	HasMore        bool            `json:"has_more"`
+	TotalCount     int             `json:"total_count"`
+}
+
+// DomainMonitorResponse represents the response from POST/PUT /domain_monitors
+type DomainMonitorResponse struct {
+	DomainMonitor DomainMonitor `json:"domain_monitor"`
+}
+
+// CreateDomainMonitorRequest represents the request body for creating a domain monitor
+type CreateDomainMonitorRequest struct {
+	Name              string `json:"name"`
+	Domain            string `json:"domain"`
+	Interval          int    `json:"check_interval,omitempty"`
+	GracePeriod       int    `json:"grace_period,omitempty"`
+	WarningThreshold  int    `json:"warning_threshold,omitempty"`
+	UrgentThreshold   int    `json:"urgent_threshold,omitempty"`
+	CriticalThreshold int    `json:"critical_threshold,omitempty"`
+	Status            string `json:"status,omitempty"`
+}
+
+// UpdateDomainMonitorRequest represents the request body for updating a domain monitor
+type UpdateDomainMonitorRequest struct {
+	Name              *string `json:"name,omitempty"`
+	Domain            *string `json:"domain,omitempty"`
+	Interval          *int    `json:"check_interval,omitempty"`
+	GracePeriod       *int    `json:"grace_period,omitempty"`
+	WarningThreshold  *int    `json:"warning_threshold,omitempty"`
+	UrgentThreshold   *int    `json:"urgent_threshold,omitempty"`
+	CriticalThreshold *int    `json:"critical_threshold,omitempty"`
+	Status            *string `json:"status,omitempty"`
+}
+
+// DNS Monitor types
+
+// DnsMonitor represents a DNS record monitor
+type DnsMonitor struct {
+	ID                    string   `json:"id"`
+	Name                  string   `json:"name"`
+	Domain                string   `json:"domain"`
+	RecordType            string   `json:"record_type"`
+	ExpectedValues        []string `json:"expected_values"`
+	Status                string   `json:"status"`
+	Interval              int      `json:"check_interval"`
+	GracePeriod           int      `json:"grace_period"`
+	CurrentValues         []string `json:"current_values"`
+	LastChanged           *string  `json:"last_changed"`
+	HasMismatch           bool     `json:"has_mismatch"`
+	LastCheckAt           string   `json:"last_check_at"`
+	LastSuccessfulCheckAt string   `json:"last_successful_check_at"`
+	ConsecutiveFailures   int      `json:"consecutive_failures"`
+	CreatedAt             string   `json:"created_at"`
+	UpdatedAt             string   `json:"updated_at"`
+}
+
+// DnsMonitorsResponse represents the response from GET /dns_monitors
+type DnsMonitorsResponse struct {
+	DnsMonitors []DnsMonitor `json:"dns_monitors"`
+	HasMore     bool         `json:"has_more"`
+	TotalCount  int          `json:"total_count"`
+}
+
+// DnsMonitorResponse represents the response from POST/PUT /dns_monitors
+type DnsMonitorResponse struct {
+	DnsMonitor DnsMonitor `json:"dns_monitor"`
+}
+
+// CreateDnsMonitorRequest represents the request body for creating a DNS monitor
+type CreateDnsMonitorRequest struct {
+	Name           string   `json:"name"`
+	Domain         string   `json:"domain"`
+	RecordType     string   `json:"record_type"`
+	ExpectedValues []string `json:"expected_values"`
+	Interval       int      `json:"check_interval,omitempty"`
+	GracePeriod    int      `json:"grace_period,omitempty"`
+	Status         string   `json:"status,omitempty"`
+}
+
+// UpdateDnsMonitorRequest represents the request body for updating a DNS monitor
+type UpdateDnsMonitorRequest struct {
+	Name           *string   `json:"name,omitempty"`
+	Domain         *string   `json:"domain,omitempty"`
+	RecordType     *string   `json:"record_type,omitempty"`
+	ExpectedValues *[]string `json:"expected_values,omitempty"`
+	Interval       *int      `json:"check_interval,omitempty"`
+	GracePeriod    *int      `json:"grace_period,omitempty"`
+	Status         *string   `json:"status,omitempty"`
+}
