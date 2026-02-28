@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.1] - 2026-02-28
+
+### Fixed
+
+- `dns show` now correctly highlights unexpected current values in red and matching values in green (colors were inverted)
+- Renamed "Mismatch" status label to "Status" with clearer `✓`/`✗` indicators
+
 ## [1.3.0] - 2026-02-18
 
 ### Added
+
 - **DNS Record Monitoring**: Full CRUD operations for DNS record monitors
 - Monitor DNS records for unexpected changes across A, AAAA, MX, CNAME, TXT, and NS record types
 - Mismatch detection with color-coded status (green = values match, red = values don't match)
@@ -23,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Incident history tracking for domain expiration events
 
 ### Commands
+
 - `groovekit dns` - Manage DNS record monitors
   - `list` - View all DNS monitors with mismatch status
   - `show <id>` - Display monitor details including expected and current values
@@ -43,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `incidents <id>` - View domain monitor incident history
 
 ### Technical
+
 - Added `DnsMonitor`, `CreateDnsMonitorRequest`, and `UpdateDnsMonitorRequest` types
 - Added `DomainMonitor`, `CreateDomainMonitorRequest`, and `UpdateDomainMonitorRequest` types
 - Added client methods for DNS and domain CRUD, incidents, pause, and resume
@@ -51,6 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2026-02-12
 
 ### Added
+
 - **SSL Certificate Monitoring**: Full CRUD operations for SSL certificate monitors
 - Track SSL certificate expiration dates with configurable warning thresholds
 - Color-coded certificate expiration display (green/yellow/red based on days remaining)
@@ -60,6 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Certificate details including issuer, subject, and expiration information
 
 ### Commands
+
 - `groovekit certs` - Manage SSL certificate monitors
   - `list` - View all SSL certificate monitors with expiration status
   - `show <id>` - Display detailed certificate information
@@ -71,12 +83,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `incidents <id>` - View certificate incident history
 
 ### Improved
+
 - Comprehensive test coverage for jobs, monitors, and certs commands
 - Added table-driven tests for helper functions
 - Flag validation tests for all commands
 - Subcommand registration verification tests
 
 ### Technical
+
 - Added `SslMonitor` type with full certificate tracking fields
 - Implemented `CreateSslMonitorRequest` and `UpdateSslMonitorRequest` types
 - Added client methods: `CreateCert`, `UpdateCert`, `DeleteCert`, `ListCertIncidents`
@@ -85,18 +99,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.1.0] - 2026-02-09
 
 ### Added
+
 - **CI/CD Integration Support**: Headless authentication via `GROOVEKIT_TOKEN` environment variable
 - API key authentication support for long-lived tokens in automated workflows
 - Compatible with GitHub Actions, GitLab CI, CircleCI, and all major CI/CD platforms
 - Automatic fallback from JWT to API key authentication
 
 ### Use Cases
+
 - Block deployments when monitors are down
 - Automate monitor creation for new services
 - Check monitor status as part of health checks
 - View incidents and check history in CI pipelines
 
 ### Example
+
 ```bash
 # Set environment variable (e.g., in GitHub Actions secrets)
 export GROOVEKIT_TOKEN="gk_..."
@@ -112,6 +129,7 @@ See the [CI/CD Integration Guide](https://groovekit.io/dashboard/docs#ci-cd-inte
 ## [1.0.0] - 2026-02-06
 
 ### Added
+
 - Initial release of GrooveKit CLI
 - Full CRUD operations for cron job monitors (create, list, show, update, delete)
 - Full CRUD operations for API monitors (create, list, show, update, delete)
@@ -126,6 +144,7 @@ See the [CI/CD Integration Guide](https://groovekit.io/dashboard/docs#ci-cd-inte
 - Homebrew installation support
 
 ### Commands
+
 - `groovekit auth login` - Authenticate with GrooveKit
 - `groovekit auth logout` - Sign out
 - `groovekit jobs` - Manage cron job monitors
