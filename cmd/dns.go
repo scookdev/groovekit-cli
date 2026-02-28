@@ -154,7 +154,7 @@ var dnsShowCmd = &cobra.Command{
 			fmt.Printf("  (none)\n")
 		} else {
 			for _, val := range dns.ExpectedValues {
-				fmt.Printf("  - %s\n", output.Green(val))
+				fmt.Printf("  - %s\n", val)
 			}
 		}
 
@@ -165,19 +165,19 @@ var dnsShowCmd = &cobra.Command{
 		} else {
 			for _, val := range dns.CurrentValues {
 				// Highlight if this value is not in expected values
-				if slices.Contains(dns.ExpectedValues, val) {
+				if !slices.Contains(dns.ExpectedValues, val) {
 					fmt.Printf("  - %s (unexpected)\n", output.Red(val))
 				} else {
-					fmt.Printf("  - %s\n", val)
+					fmt.Printf("  - %s\n", output.Green(val))
 				}
 			}
 		}
 
 		// Show mismatch status
 		if dns.HasMismatch {
-			fmt.Printf("\nMismatch:                 %s\n", output.Red("Yes - values don't match!"))
+			fmt.Printf("\nStatus:                   %s\n", output.Red("✗ Mismatch - values don't match!"))
 		} else {
-			fmt.Printf("\nMismatch:                 %s\n", output.Green("No - values match"))
+			fmt.Printf("\nStatus:                   %s\n", output.Green("✓ Values match"))
 		}
 
 		if dns.LastChanged != nil {
