@@ -62,7 +62,7 @@ func listMonitorChecks(client *api.Client, monitorID string, jsonOutput bool) er
 		s.Start()
 	}
 
-	checks, err := client.ListMonitorChecks(fullID)
+	checks, err := client.ListApiChecks(fullID)
 
 	if s != nil {
 		s.Stop()
