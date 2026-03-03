@@ -3,6 +3,7 @@ version: 2
 before:
   hooks:
     - go mod tidy
+    - go run ./tools/gen-docs/ ./man1/ {{.Version}}
 
 builds:
   - env:
@@ -36,6 +37,7 @@ archives:
     files:
       - README.md
       - LICENSE*
+      - man1/*.1
 
 checksum:
   name_template: 'checksums.txt'
@@ -57,3 +59,4 @@ brews:
       system "#{bin}/groovekit", "version"
     install: |
       bin.install "groovekit"
+      man1.install Dir["man1/*.1"]

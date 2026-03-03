@@ -239,57 +239,57 @@ func (c *Client) ListJobIncidents(id string) ([]Incident, error) {
 	return result.Incidents, nil
 }
 
-// Monitors API methods
+// API Monitors methods
 
-// ListMonitors returns all api monitors for the authenticated user
-func (c *Client) ListMonitors() (*MonitorsResponse, error) {
-	var result MonitorsResponse
+// ListApi returns all api monitors for the authenticated user
+func (c *Client) ListApis() (*ApisResponse, error) {
+	var result ApisResponse
 	if err := c.Get("/api_monitors", &result); err != nil {
 		return nil, err
 	}
 	return &result, nil
 }
 
-// GetMonitor returns a single api monitor by ID
-func (c *Client) GetMonitor(id string) (*Monitor, error) {
-	var result MonitorResponse
+// GetApi returns a single api monitor by ID
+func (c *Client) GetApi(id string) (*ApiMonitor, error) {
+	var result ApiMonitorResponse
 	if err := c.Get("/api_monitors/"+id, &result); err != nil {
 		return nil, err
 	}
 	return &result.APIMonitor, nil
 }
 
-// CreateMonitor creates a new api monitor
-func (c *Client) CreateMonitor(req *CreateMonitorRequest) (*Monitor, error) {
+// CreateApi creates a new api monitor
+func (c *Client) CreateApi(req *CreateApiRequest) (*ApiMonitor, error) {
 	payload := map[string]interface{}{
 		"api_monitor": req,
 	}
-	var result MonitorResponse
+	var result ApiMonitorResponse
 	if err := c.Post("/api_monitors", payload, &result); err != nil {
 		return nil, err
 	}
 	return &result.APIMonitor, nil
 }
 
-// UpdateMonitor updates an existing api monitor
-func (c *Client) UpdateMonitor(id string, req *UpdateMonitorRequest) (*Monitor, error) {
+// UpdateApi updates an existing api monitor
+func (c *Client) UpdateApi(id string, req *UpdateApiRequest) (*ApiMonitor, error) {
 	payload := map[string]interface{}{
 		"api_monitor": req,
 	}
-	var result MonitorResponse
+	var result ApiMonitorResponse
 	if err := c.Put("/api_monitors/"+id, payload, &result); err != nil {
 		return nil, err
 	}
 	return &result.APIMonitor, nil
 }
 
-// DeleteMonitor deletes an api monitor by ID
-func (c *Client) DeleteMonitor(id string) error {
+// DeleteApi deletes an api monitor by ID
+func (c *Client) DeleteApi(id string) error {
 	return c.Delete("/api_monitors/" + id)
 }
 
-// ListMonitorChecks returns recent checks for an api monitor
-func (c *Client) ListMonitorChecks(id string) ([]Check, error) {
+// ListApiChecks returns recent checks for an api monitor
+func (c *Client) ListApiChecks(id string) ([]Check, error) {
 	var result struct {
 		APIChecks []Check `json:"api_checks"`
 	}
@@ -299,8 +299,8 @@ func (c *Client) ListMonitorChecks(id string) ([]Check, error) {
 	return result.APIChecks, nil
 }
 
-// ListMonitorIncidents returns incident history for an api monitor
-func (c *Client) ListMonitorIncidents(id string) ([]Incident, error) {
+// ListApiIncidents returns incident history for an api monitor
+func (c *Client) ListApiIncidents(id string) ([]Incident, error) {
 	var result struct {
 		Incidents []Incident `json:"incidents"`
 	}

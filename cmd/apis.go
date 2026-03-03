@@ -10,16 +10,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var monitorsCmd = &cobra.Command{
-	Use:   "monitors",
+var apisCmd = &cobra.Command{
+	Use:   "apis",
 	Short: "Manage API endpoint monitors",
 	Long:  "List, create, show, and delete API endpoint monitors",
 }
 
-// monitors list
-var monitorsListCmd = &cobra.Command{
+// apis list
+var apisListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all monitors",
+	Short: "List all api monitors",
 	Long:  "List all API endpoint monitors for your account",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
@@ -36,23 +36,23 @@ var monitorsListCmd = &cobra.Command{
 			s.Start()
 		}
 
-		result, err := client.ListMonitors()
+		result, err := client.ListApis()
 
 		if s != nil {
 			s.Stop()
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed to list monitors: %w", err)
+			return fmt.Errorf("failed to list API monitors: %w", err)
 		}
 		if jsonOutput {
 			return outputJSON(result)
 		}
 
 		if len(result.APIMonitors) == 0 {
-			output.InfoMessage("No monitors found")
-			fmt.Println("\nCreate your first monitor:")
-			fmt.Println("  groovekit monitors create --name 'Production API' --url https://api.example.com/health --interval 60")
+			output.InfoMessage("No API monitors found")
+			fmt.Println("\nCreate your first API monitor:")
+			fmt.Println("  groovekit apis create --name 'Production API' --url https://api.example.com/health --interval 60")
 			return nil
 		}
 
@@ -89,16 +89,16 @@ var monitorsListCmd = &cobra.Command{
 		}
 
 		table.Flush()
-		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d monitor(s)", len(result.APIMonitors))))
+		fmt.Printf("\n%s\n", output.Bold(fmt.Sprintf("Total: %d API monitor(s)", len(result.APIMonitors))))
 		return nil
 	},
 }
 
-// monitors show <id>
-var monitorsShowCmd = &cobra.Command{
+// apis show <id>
+var apisShowCmd = &cobra.Command{
 	Use:   "show <id>",
-	Short: "Show monitor details",
-	Long:  "Display detailed information about a specific monitor",
+	Short: "Show API monitor details",
+	Long:  "Display detailed information about a specific API monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -121,14 +121,14 @@ var monitorsShowCmd = &cobra.Command{
 			s.Start()
 		}
 
-		monitor, err := client.GetMonitor(fullID)
+		monitor, err := client.GetApi(fullID)
 
 		if s != nil {
 			s.Stop()
 		}
 
 		if err != nil {
-			return fmt.Errorf("failed to get monitor: %w", err)
+			return fmt.Errorf("failed to get API monitor: %w", err)
 		}
 		if jsonOutput {
 			return outputJSON(monitor)
@@ -174,10 +174,10 @@ var monitorsShowCmd = &cobra.Command{
 	},
 }
 
-// monitors create
-var monitorsCreateCmd = &cobra.Command{
+// apis create
+var apisCreateCmd = &cobra.Command{
 	Use:   "create",
-	Short: "Create a new monitor",
+	Short: "Create a new API monitor",
 	Long:  "Create a new API endpoint monitor",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		client, err := getAuthenticatedClient()
@@ -201,7 +201,7 @@ var monitorsCreateCmd = &cobra.Command{
 			return fmt.Errorf("--interval must be greater than 0")
 		}
 
-		req := &api.CreateMonitorRequest{
+		req := &api.CreateApiRequest{
 			Name:       name,
 			URL:        url,
 			Interval:   interval,
@@ -210,14 +210,14 @@ var monitorsCreateCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		monitor, err := client.CreateMonitor(req)
+		monitor, err := client.CreateApi(req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to create monitor: %w", err)
+			return fmt.Errorf("failed to create API monitor: %w", err)
 		}
 
-		output.SuccessMessage("Monitor created successfully\n")
+		output.SuccessMessage("API monitor created successfully\n")
 		fmt.Printf("ID:          %s\n", output.Cyan(monitor.ID))
 		fmt.Printf("Name:        %s\n", output.Bold(monitor.Name))
 		fmt.Printf("URL:         %s\n", monitor.URL)
@@ -227,10 +227,10 @@ var monitorsCreateCmd = &cobra.Command{
 	},
 }
 
-// monitors update <id>
-var monitorsUpdateCmd = &cobra.Command{
+// apis update <id>
+var apisUpdateCmd = &cobra.Command{
 	Use:   "update <id>",
-	Short: "Update a monitor",
+	Short: "Update an API monitor",
 	Long:  "Update an existing API endpoint monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -246,7 +246,7 @@ var monitorsUpdateCmd = &cobra.Command{
 		}
 
 		// Build update request with only provided flags
-		req := &api.UpdateMonitorRequest{}
+		req := &api.UpdateApiRequest{}
 		hasUpdates := false
 
 		if cmd.Flags().Changed("name") {
@@ -303,14 +303,14 @@ var monitorsUpdateCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		monitor, err := client.UpdateMonitor(fullID, req)
+		monitor, err := client.UpdateApi(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to update monitor: %w", err)
+			return fmt.Errorf("failed to update API monitor: %w", err)
 		}
 
-		output.SuccessMessage("Monitor updated successfully\n")
+		output.SuccessMessage("API monitor updated successfully\n")
 		fmt.Printf("ID:       %s\n", output.Cyan(monitor.ID))
 		fmt.Printf("Name:     %s\n", output.Bold(monitor.Name))
 		fmt.Printf("URL:      %s\n", monitor.URL)
@@ -322,10 +322,10 @@ var monitorsUpdateCmd = &cobra.Command{
 	},
 }
 
-// monitors pause <id>
-var monitorsPauseCmd = &cobra.Command{
+// apis pause <id>
+var apisPauseCmd = &cobra.Command{
 	Use:   "pause <id>",
-	Short: "Pause a monitor",
+	Short: "Pause an API monitor",
 	Long:  "Pause an API endpoint monitor (sets status to paused)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -342,26 +342,26 @@ var monitorsPauseCmd = &cobra.Command{
 
 		// Update status to paused
 		status := "paused"
-		req := &api.UpdateMonitorRequest{Status: &status}
+		req := &api.UpdateApiRequest{Status: &status}
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		_, err = client.UpdateMonitor(fullID, req)
+		_, err = client.UpdateApi(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to pause monitor: %w", err)
+			return fmt.Errorf("failed to pause API monitor: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s paused successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("API monitor %s paused successfully", args[0]))
 		return nil
 	},
 }
 
-// monitors resume <id>
-var monitorsResumeCmd = &cobra.Command{
+// apis resume <id>
+var apisResumeCmd = &cobra.Command{
 	Use:   "resume <id>",
-	Short: "Resume a monitor",
+	Short: "Resume an API monitor",
 	Long:  "Resume a paused API endpoint monitor (sets status to active)",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(_ *cobra.Command, args []string) error {
@@ -378,27 +378,27 @@ var monitorsResumeCmd = &cobra.Command{
 
 		// Update status to active
 		status := "active"
-		req := &api.UpdateMonitorRequest{Status: &status}
+		req := &api.UpdateApiRequest{Status: &status}
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		_, err = client.UpdateMonitor(fullID, req)
+		_, err = client.UpdateApi(fullID, req)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to resume monitor: %w", err)
+			return fmt.Errorf("failed to resume API monitor: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s resumed successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("API monitor %s resumed successfully", args[0]))
 		return nil
 	},
 }
 
-// monitors incidents <id>
-var monitorsIncidentsCmd = &cobra.Command{
+// apis incidents <id>
+var apisIncidentsCmd = &cobra.Command{
 	Use:   "incidents <id>",
 	Short: "Show incident history",
-	Long:  "Display incident history (downtime periods) for a monitor",
+	Long:  "Display incident history (downtime periods) for an API monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		client, err := getAuthenticatedClient()
@@ -421,7 +421,7 @@ var monitorsIncidentsCmd = &cobra.Command{
 			s.Start()
 		}
 
-		incidents, err := client.ListMonitorIncidents(fullID)
+		incidents, err := client.ListApiIncidents(fullID)
 
 		if s != nil {
 			s.Stop()
@@ -436,7 +436,7 @@ var monitorsIncidentsCmd = &cobra.Command{
 		}
 
 		if len(incidents) == 0 {
-			output.InfoMessage("No incidents found - this monitor has been running smoothly!")
+			output.InfoMessage("No incidents found - this API monitor has been running smoothly!")
 			return nil
 		}
 
@@ -478,10 +478,10 @@ var monitorsIncidentsCmd = &cobra.Command{
 	},
 }
 
-// monitors delete <id>
-var monitorsDeleteCmd = &cobra.Command{
+// apis delete <id>
+var apisDeleteCmd = &cobra.Command{
 	Use:   "delete <id>",
-	Short: "Delete a monitor",
+	Short: "Delete an API monitor",
 	Long:  "Delete an API endpoint monitor",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -499,7 +499,7 @@ var monitorsDeleteCmd = &cobra.Command{
 		// Confirm deletion
 		confirm, _ := cmd.Flags().GetBool("force")
 		if !confirm {
-			fmt.Printf("Are you sure you want to delete monitor %s? (y/N): ", args[0])
+			fmt.Printf("Are you sure you want to delete API monitor %s? (y/N): ", args[0])
 			var response string
 			_, _ = fmt.Scanln(&response)
 			if response != "y" && response != "Y" {
@@ -510,14 +510,14 @@ var monitorsDeleteCmd = &cobra.Command{
 
 		s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 		s.Start()
-		err = client.DeleteMonitor(fullID)
+		err = client.DeleteApi(fullID)
 		s.Stop()
 
 		if err != nil {
-			return fmt.Errorf("failed to delete monitor: %w", err)
+			return fmt.Errorf("failed to delete API monitor: %w", err)
 		}
 
-		output.SuccessMessage(fmt.Sprintf("Monitor %s deleted successfully", args[0]))
+		output.SuccessMessage(fmt.Sprintf("API monitor %s deleted successfully", args[0]))
 		return nil
 	},
 }
@@ -530,9 +530,9 @@ func resolveMonitorID(client *api.Client, shortID string) (string, error) {
 	}
 
 	// Otherwise, fetch all monitors and match by prefix
-	result, err := client.ListMonitors()
+	result, err := client.ListApis()
 	if err != nil {
-		return "", fmt.Errorf("failed to list monitors: %w", err)
+		return "", fmt.Errorf("failed to list API monitors: %w", err)
 	}
 
 	var matches []string
@@ -543,11 +543,11 @@ func resolveMonitorID(client *api.Client, shortID string) (string, error) {
 	}
 
 	if len(matches) == 0 {
-		return "", fmt.Errorf("no monitor found with ID prefix '%s'", shortID)
+		return "", fmt.Errorf("no API monitor found with ID prefix '%s'", shortID)
 	}
 
 	if len(matches) > 1 {
-		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple monitors", shortID)
+		return "", fmt.Errorf("ambiguous ID prefix '%s' matches multiple API monitors", shortID)
 	}
 
 	return matches[0], nil
@@ -555,45 +555,45 @@ func resolveMonitorID(client *api.Client, shortID string) (string, error) {
 
 func init() {
 	// Add flags to list command
-	monitorsListCmd.Flags().Bool("json", false, "Output as JSON")
+	apisListCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to show command
-	monitorsShowCmd.Flags().Bool("json", false, "Output as JSON")
+	apisShowCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to create command
-	monitorsCreateCmd.Flags().String("name", "", "Monitor name (required)")
-	monitorsCreateCmd.Flags().String("url", "", "URL to monitor (required)")
-	monitorsCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
-	monitorsCreateCmd.Flags().String("method", "GET", "HTTP method")
-	_ = monitorsCreateCmd.MarkFlagRequired("name")
-	_ = monitorsCreateCmd.MarkFlagRequired("url")
+	apisCreateCmd.Flags().String("name", "", "Monitor name (required)")
+	apisCreateCmd.Flags().String("url", "", "URL to monitor (required)")
+	apisCreateCmd.Flags().Int("interval", 60, "Check interval in minutes")
+	apisCreateCmd.Flags().String("method", "GET", "HTTP method")
+	_ = apisCreateCmd.MarkFlagRequired("name")
+	_ = apisCreateCmd.MarkFlagRequired("url")
 
 	// Add flags to update command
-	monitorsUpdateCmd.Flags().String("name", "", "Monitor name")
-	monitorsUpdateCmd.Flags().String("url", "", "URL to monitor")
-	monitorsUpdateCmd.Flags().String("http-method", "", "HTTP method (GET, POST, etc)")
-	monitorsUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
-	monitorsUpdateCmd.Flags().Int("timeout", 0, "Request timeout in seconds")
-	monitorsUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
-	monitorsUpdateCmd.Flags().String("status", "", "Monitor status (active, inactive, paused)")
-	monitorsUpdateCmd.Flags().IntSlice("expected-status-codes", nil, "Expected HTTP status codes (comma-separated)")
+	apisUpdateCmd.Flags().String("name", "", "Monitor name")
+	apisUpdateCmd.Flags().String("url", "", "URL to monitor")
+	apisUpdateCmd.Flags().String("http-method", "", "HTTP method (GET, POST, etc)")
+	apisUpdateCmd.Flags().Int("interval", 0, "Check interval in minutes")
+	apisUpdateCmd.Flags().Int("timeout", 0, "Request timeout in seconds")
+	apisUpdateCmd.Flags().Int("grace-period", 0, "Grace period in minutes")
+	apisUpdateCmd.Flags().String("status", "", "Monitor status (active, inactive, paused)")
+	apisUpdateCmd.Flags().IntSlice("expected-status-codes", nil, "Expected HTTP status codes (comma-separated)")
 
 	// Add flags to incidents command
-	monitorsIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
+	apisIncidentsCmd.Flags().Bool("json", false, "Output as JSON")
 
 	// Add flags to delete command
-	monitorsDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
+	apisDeleteCmd.Flags().BoolP("force", "f", false, "Skip confirmation")
 
 	// Add subcommands
-	monitorsCmd.AddCommand(monitorsListCmd)
-	monitorsCmd.AddCommand(monitorsShowCmd)
-	monitorsCmd.AddCommand(monitorsCreateCmd)
-	monitorsCmd.AddCommand(monitorsUpdateCmd)
-	monitorsCmd.AddCommand(monitorsPauseCmd)
-	monitorsCmd.AddCommand(monitorsResumeCmd)
-	monitorsCmd.AddCommand(monitorsIncidentsCmd)
-	monitorsCmd.AddCommand(monitorsDeleteCmd)
+	apisCmd.AddCommand(apisListCmd)
+	apisCmd.AddCommand(apisShowCmd)
+	apisCmd.AddCommand(apisCreateCmd)
+	apisCmd.AddCommand(apisUpdateCmd)
+	apisCmd.AddCommand(apisPauseCmd)
+	apisCmd.AddCommand(apisResumeCmd)
+	apisCmd.AddCommand(apisIncidentsCmd)
+	apisCmd.AddCommand(apisDeleteCmd)
 
-	// Add monitors command to root
-	rootCmd.AddCommand(monitorsCmd)
+	// Add apis command to root
+	rootCmd.AddCommand(apisCmd)
 }

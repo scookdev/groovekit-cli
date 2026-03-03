@@ -16,6 +16,11 @@ Verify your services are working correctly with heartbeat monitoring,
 JSON Schema validation, GraphQL support, and instant alerts.`,
 }
 
+// RootCmd returns the root command, used by tools such as doc generators.
+func RootCmd() *cobra.Command {
+	return rootCmd
+}
+
 // Execute runs the root command
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {

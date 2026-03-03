@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-03-02
+
+### Changed
+
+- Renamed `monitors` command to `apis` for clarity — all commands (jobs, dns, domains, certs) are monitors, so `apis` more precisely describes API endpoint monitors
+
+### Added
+
+- Man page generation via `cobra/doc` — all commands and subcommands now have man pages installed automatically via Homebrew (`man groovekit-apis`, `man groovekit-jobs-create`, etc.)
+
+### Technical
+
+- Renamed all `monitors*Cmd` Go variables to `apis*Cmd`
+- Renamed `Monitor` type to `ApiMonitor` and `MonitorsResponse` to `ApisResponse` in internal API types
+- Rename `GetMonitor`, `CreateMonitor`, and `UpdateMonitor` client methods to `*Api`
+- Updated `GetApi`, `CreateApi`, and `UpdateApi` client methods to return `*ApiMonitor`
+- Added `tools/gen-docs` man page generator, wired into goreleaser build and Homebrew formula
+
 ## [1.3.1] - 2026-02-28
 
 ### Fixed

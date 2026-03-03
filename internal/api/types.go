@@ -55,10 +55,10 @@ type UpdateJobRequest struct {
 	AllowedIPs    *[]string `json:"allowed_ips,omitempty"`
 }
 
-// Monitor types
+// API types
 
-// Monitor represents an API endpoint monitor
-type Monitor struct {
+// API represents an API endpoint monitor
+type ApiMonitor struct {
 	ID                    string      `json:"id"`
 	Name                  string      `json:"name"`
 	URL                   string      `json:"url"`
@@ -84,17 +84,17 @@ type Monitor struct {
 }
 
 // MonitorsResponse represents the response from GET /api_monitors
-type MonitorsResponse struct {
-	APIMonitors []Monitor `json:"api_monitors"`
+type ApisResponse struct {
+	APIMonitors []ApiMonitor `json:"api_monitors"`
 }
 
 // MonitorResponse represents the response from POST/PUT /api_monitors
-type MonitorResponse struct {
-	APIMonitor Monitor `json:"api_monitor"`
+type ApiMonitorResponse struct {
+	APIMonitor ApiMonitor `json:"api_monitor"`
 }
 
-// CreateMonitorRequest represents the request body for creating a monitor
-type CreateMonitorRequest struct {
+// CreateApiRequest represents the request body for creating a monitor
+type CreateApiRequest struct {
 	Name                string `json:"name"`
 	URL                 string `json:"url"`
 	HTTPMethod          string `json:"http_method,omitempty"`
@@ -105,8 +105,8 @@ type CreateMonitorRequest struct {
 	Status              string `json:"status,omitempty"`
 }
 
-// UpdateMonitorRequest represents the request body for updating a monitor
-type UpdateMonitorRequest struct {
+// UpdateApiRequest represents the request body for updating a monitor
+type UpdateApiRequest struct {
 	Name                *string `json:"name,omitempty"`
 	URL                 *string `json:"url,omitempty"`
 	HTTPMethod          *string `json:"http_method,omitempty"`
