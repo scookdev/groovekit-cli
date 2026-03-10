@@ -10,7 +10,7 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "groovekit",
 	Short: "Monitor cron jobs and APIs from your terminal",
-	Long: `GrooveKit CLI - Monitor your cron jobs and API endpoints before users notice.
+	Long: `GrooveKit CLI - Monitor your cron jobs, API endpoints and infrastructure before users notice.
 
 Verify your services are working correctly with heartbeat monitoring,
 JSON Schema validation, GraphQL support, and instant alerts.`,

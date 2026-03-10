@@ -63,7 +63,7 @@ type ApiMonitor struct {
 	Name                  string      `json:"name"`
 	URL                   string      `json:"url"`
 	HTTPMethod            string      `json:"http_method"`
-	Headers               interface{} `json:"headers"`
+	Headers               any         `json:"headers"`
 	ExpectedStatusCodes   []int       `json:"expected_status_codes"`
 	Timeout               int         `json:"timeout"`
 	Interval              int         `json:"interval"`

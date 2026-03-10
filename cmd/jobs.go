@@ -518,7 +518,7 @@ func truncate(s string, maxLen int) string {
 }
 
 // Helper function to output JSON
-func outputJSON(v interface{}) error {
+func outputJSON(v any) error {
 	data, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)

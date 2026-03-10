@@ -70,7 +70,7 @@ func (c *Client) Login(email, password string) (string, error) {
 }
 
 // doRequest is a helper method for authenticated requests
-func (c *Client) doRequest(method, path string, body interface{}, result interface{}) error {
+func (c *Client) doRequest(method, path string, body any, result any) error {
 	var reqBody io.Reader
 	if body != nil {
 		jsonData, err := json.Marshal(body)
@@ -138,17 +138,17 @@ func (c *Client) doRequest(method, path string, body interface{}, result interfa
 }
 
 // Get performs a GET request to the API
-func (c *Client) Get(path string, result interface{}) error {
+func (c *Client) Get(path string, result any) error {
 	return c.doRequest("GET", path, nil, result)
 }
 
 // Post performs a POST request to the API
-func (c *Client) Post(path string, body interface{}, result interface{}) error {
+func (c *Client) Post(path string, body any, result any) error {
 	return c.doRequest("POST", path, body, result)
 }
 
 // Put performs a PUT request to the API
-func (c *Client) Put(path string, body interface{}, result interface{}) error {
+func (c *Client) Put(path string, body any, result any) error {
 	return c.doRequest("PUT", path, body, result)
 }
 
@@ -261,7 +261,7 @@ func (c *Client) GetApi(id string) (*ApiMonitor, error) {
 
 // CreateApi creates a new api monitor
 func (c *Client) CreateApi(req *CreateApiRequest) (*ApiMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"api_monitor": req,
 	}
 	var result ApiMonitorResponse
@@ -273,7 +273,7 @@ func (c *Client) CreateApi(req *CreateApiRequest) (*ApiMonitor, error) {
 
 // UpdateApi updates an existing api monitor
 func (c *Client) UpdateApi(id string, req *UpdateApiRequest) (*ApiMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"api_monitor": req,
 	}
 	var result ApiMonitorResponse
@@ -332,7 +332,7 @@ func (c *Client) ListCerts() (*SslMonitorsResponse, error) {
 
 // CreateCert creates a new SSL monitor
 func (c *Client) CreateCert(req *CreateSslMonitorRequest) (*SslMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"ssl_monitor": req,
 	}
 	var result SslMonitorResponse
@@ -344,7 +344,7 @@ func (c *Client) CreateCert(req *CreateSslMonitorRequest) (*SslMonitor, error) {
 
 // UpdateCert updates an existing SSL monitor
 func (c *Client) UpdateCert(id string, req *UpdateSslMonitorRequest) (*SslMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"ssl_monitor": req,
 	}
 	var result SslMonitorResponse
@@ -392,7 +392,7 @@ func (c *Client) GetDomain(id string) (*DomainMonitor, error) {
 
 // CreateDomain creates a new domain monitor
 func (c *Client) CreateDomain(req *CreateDomainMonitorRequest) (*DomainMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"domain_monitor": req,
 	}
 	var result DomainMonitorResponse
@@ -404,7 +404,7 @@ func (c *Client) CreateDomain(req *CreateDomainMonitorRequest) (*DomainMonitor, 
 
 // UpdateDomain updates an existing domain monitor
 func (c *Client) UpdateDomain(id string, req *UpdateDomainMonitorRequest) (*DomainMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"domain_monitor": req,
 	}
 	var result DomainMonitorResponse
@@ -452,7 +452,7 @@ func (c *Client) GetDnsMonitor(id string) (*DnsMonitor, error) {
 
 // CreateDnsMonitor creates a new DNS monitor
 func (c *Client) CreateDnsMonitor(req *CreateDnsMonitorRequest) (*DnsMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"dns_monitor": req,
 	}
 	var result DnsMonitorResponse
@@ -464,7 +464,7 @@ func (c *Client) CreateDnsMonitor(req *CreateDnsMonitorRequest) (*DnsMonitor, er
 
 // UpdateDnsMonitor updates an existing DNS monitor
 func (c *Client) UpdateDnsMonitor(id string, req *UpdateDnsMonitorRequest) (*DnsMonitor, error) {
-	payload := map[string]interface{}{
+	payload := map[string]any {
 		"dns_monitor": req,
 	}
 	var result DnsMonitorResponse
