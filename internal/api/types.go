@@ -149,26 +149,32 @@ type Incident struct {
 
 // Account represents user account with subscription and usage
 type Account struct {
-	ID           string               `json:"id"`
-	Email        string               `json:"email"`
-	FirstName    string               `json:"first_name"`
-	LastName     string               `json:"last_name"`
-	FullName     string               `json:"full_name"`
-	JobCount     int                  `json:"job_count"`
-	MonitorCount int                  `json:"monitor_count"`
-	SMSUsed      int                  `json:"sms_used"`
+	ID                  string        `json:"id"`
+	Email               string        `json:"email"`
+	FirstName						string        `json:"first_name"`
+	LastName						string        `json:"last_name"`
+	FullName						string        `json:"full_name"`
+	JobMonitorCount     int           `json:"job_monitor_count"`
+	ApiMonitorCount     int           `json:"api_monitor_count"`
+	SslMonitorCount     int           `json:"ssl_monitor_count"`
+	DomainMonitorCount  int           `json:"domain_monitor_count"`
+	DnsMonitorCount     int           `json:"dns_monitor_count"`
+	SMSUsed             int           `json:"sms_used"`
 	Subscription *AccountSubscription `json:"subscription"`
 }
 
 // AccountSubscription represents subscription details
 type AccountSubscription struct {
-	PlanName         string  `json:"plan_name"`
-	Status           string  `json:"status"`
-	CurrentPeriodEnd *string `json:"current_period_end"`
-	MaxJobs          int     `json:"max_jobs"`
-	MaxMonitors      int     `json:"max_monitors"`
-	SMSLimit         int     `json:"sms_limit"`
-	MinCheckInterval int     `json:"min_check_interval"`
+	PlanName          string  `json:"plan_name"`
+	Status            string  `json:"status"`
+	CurrentPeriodEnd  *string `json:"current_period_end"`
+	MaxJobs           int     `json:"max_jobs"`
+	MaxApiMonitors    int     `json:"max_api_monitors"`
+	MaxSslMonitors    int     `json:"max_ssl_monitors"`
+	MaxDomainMonitors int     `json:"max_domain_monitors"`
+	MaxDnsMonitors    int     `json:"max_dns_monitors"`
+	SMSLimit          int     `json:"sms_limit"`
+	MinCheckInterval  int     `json:"min_check_interval"`
 }
 
 // SslMonitor types

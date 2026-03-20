@@ -3,6 +3,7 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -69,20 +70,44 @@ var accountShowCmd = &cobra.Command{
 			fmt.Printf("\n%s\n\n", output.Bold("Usage & Limits"))
 
 			// Jobs
-			jobUsage := fmt.Sprintf("%d / %d", account.JobCount, account.Subscription.MaxJobs)
+			jobUsage := fmt.Sprintf("%d / %d", account.JobMonitorCount, account.Subscription.MaxJobs)
 			jobPercent := 0.0
 			if account.Subscription.MaxJobs > 0 {
-				jobPercent = float64(account.JobCount) / float64(account.Subscription.MaxJobs) * 100
+				jobPercent = float64(account.JobMonitorCount) / float64(account.Subscription.MaxJobs) * 100
 			}
-			fmt.Printf("Jobs:             %s %s\n", jobUsage, formatUsageBar(jobPercent))
+			fmt.Printf("Job Monitors:         %s %s\n", jobUsage, formatUsageBar(jobPercent))
 
-			// Monitors
-			monitorUsage := fmt.Sprintf("%d / %d", account.MonitorCount, account.Subscription.MaxMonitors)
-			monitorPercent := 0.0
-			if account.Subscription.MaxMonitors > 0 {
-				monitorPercent = float64(account.MonitorCount) / float64(account.Subscription.MaxMonitors) * 100
+			// Api Monitors
+			apiMonitorUsage := fmt.Sprintf("%d / %d", account.ApiMonitorCount, account.Subscription.MaxApiMonitors)
+			apiMonitorPercent := 0.0
+			if account.Subscription.MaxApiMonitors > 0 {
+				apiMonitorPercent = float64(account.ApiMonitorCount) / float64(account.Subscription.MaxApiMonitors) * 100
 			}
-			fmt.Printf("Monitors:         %s %s\n", monitorUsage, formatUsageBar(monitorPercent))
+			fmt.Printf("Api Monitors:         %s %s\n", apiMonitorUsage, formatUsageBar(apiMonitorPercent))
+
+			// Ssl Monitors
+			sslMonitorUsage := fmt.Sprintf("%d / %d", account.SslMonitorCount, account.Subscription.MaxSslMonitors)
+			sslMonitorPercent := 0.0
+			if account.Subscription.MaxSslMonitors > 0 {
+				sslMonitorPercent = float64(account.SslMonitorCount) / float64(account.Subscription.MaxSslMonitors) * 100
+			}
+			fmt.Printf("SSL Monitors:         %s %s\n", sslMonitorUsage, formatUsageBar(sslMonitorPercent))
+
+			// Domain Monitors
+			domainMonitorUsage := fmt.Sprintf("%d / %d", account.DomainMonitorCount, account.Subscription.MaxDomainMonitors)
+			domainMonitorPercent := 0.0
+			if account.Subscription.MaxDomainMonitors > 0 {
+				domainMonitorPercent = float64(account.DomainMonitorCount) / float64(account.Subscription.MaxDomainMonitors) * 100
+			}
+			fmt.Printf("Domain Monitors:      %s %s\n", domainMonitorUsage , formatUsageBar(domainMonitorPercent))
+			
+			// Dns Monitors
+			dnsMonitorUsage := fmt.Sprintf("%d / %d", account.DnsMonitorCount, account.Subscription.MaxDnsMonitors)
+			dnsMonitorPercent := 0.0
+			if account.Subscription.MaxDnsMonitors > 0 {
+				dnsMonitorPercent = float64(account.DnsMonitorCount) / float64(account.Subscription.MaxDnsMonitors) * 100
+			}
+			fmt.Printf("DNS Monitors:         %s %s\n", dnsMonitorUsage, formatUsageBar(dnsMonitorPercent))
 
 			// SMS
 			if account.Subscription.SMSLimit > 0 {
@@ -91,15 +116,15 @@ var accountShowCmd = &cobra.Command{
 				if account.Subscription.SMSLimit > 0 {
 					smsPercent = float64(account.SMSUsed) / float64(account.Subscription.SMSLimit) * 100
 				}
-				fmt.Printf("SMS this month:   %s %s\n", smsUsage, formatUsageBar(smsPercent))
+				fmt.Printf("SMS this month:       %s %s\n", smsUsage, formatUsageBar(smsPercent))
 			} else {
-				fmt.Printf("SMS this month:   %s\n", output.Yellow("Not available on this plan"))
+				fmt.Printf("SMS this month:       %s\n", output.Yellow("Not available on this plan"))
 			}
 
 			// Check interval
-			fmt.Printf("Min check interval: %s\n", output.FormatDuration(account.Subscription.MinCheckInterval))
+			fmt.Printf("Min check interval:   %s\n",  output.FormatDuration(account.Subscription.MinCheckInterval))
 		} else {
-			fmt.Printf("\n%s\n", output.Yellow("No active subscription"))
+			fmt.Printf("\n%s\n",                output.Yellow("No active subscription"))
 		}
 
 		return nil
@@ -125,22 +150,24 @@ func formatUsageBar(percent float64) string {
 	barLength := 20
 	filled := int(percent / 100 * float64(barLength))
 
-	bar := "["
-	for i := 0; i < barLength; i++ {
+	var sb strings.Builder
+	sb.WriteString("[")
+	for i := range barLength {
 		if i < filled {
 			switch {
 			case percent >= 90:
-				bar += output.Red("█")
+				sb.WriteString(output.Red("█"))
 			case percent >= 75:
-				bar += output.Yellow("█")
+				sb.WriteString(output.Yellow("█"))
 			default:
-				bar += output.Green("█")
+				sb.WriteString(output.Green("█"))
 			}
 		} else {
-			bar += "░"
+			sb.WriteString("░")
 		}
 	}
-	bar += fmt.Sprintf("] %.0f%%", percent)
+	fmt.Fprintf(&sb, "] %.0f%%", percent)
+	bar := sb.String()
 
 	return bar
 }
